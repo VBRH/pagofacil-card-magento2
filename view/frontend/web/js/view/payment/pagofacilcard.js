@@ -5,7 +5,7 @@ define(
     ],
     function (Component, rendererList) {
         'use strict';
-        console.log('algo esta pasando por aquí');
+
         rendererList.push(
             {
                 type: 'pagofacil_card',
