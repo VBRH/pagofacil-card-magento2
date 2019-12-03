@@ -32,6 +32,10 @@ class PagoFacil implements ClientInterface
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
         $simpleResponse = null;
+        /** @var string $error */
+        $error = null;
+        /** @var array $info */
+        $info = null;
 
         curl_setopt_array($this->curl, [
             CURLOPT_URL => $this->url,
@@ -46,13 +50,15 @@ class PagoFacil implements ClientInterface
         ]);
 
         $simpleResponse = curl_exec($this->curl);
+        $info = curl_getinfo($this->curl);
         $error = curl_error($this->curl);
+
         curl_close($this->curl);
 
         if ($error) {
-            throw new ClientException($error);
+            throw new ClientException($error, $info['http_code']);
         }
 
-        return new Response($simpleResponse, 200);
+        return new Response($simpleResponse, intval($info['http_code']));
     }
 }

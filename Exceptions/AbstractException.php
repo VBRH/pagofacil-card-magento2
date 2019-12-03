@@ -6,11 +6,11 @@ namespace PagoFacil\Payment\Exceptions;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Phrase;
-use Magento\Tests\NamingConvention\true\string;
+use Exception;
 
 abstract class AbstractException extends LocalizedException
 {
-    public function __construct(string $phrase, \Exception $cause = null, $code = 0)
+    public function __construct(string $phrase, $code = 0, Exception $cause = null)
     {
         parent::__construct(_($phrase), $cause, $code);
     }
