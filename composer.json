@@ -1,5 +1,5 @@
 {
-    "name": "magento/module-sample-payment-gateway",
+    "name": "pagofacilnet/card-magento2",
     "description": "Demonstrates integration with payment gateway",
     "require": {
         "php": "~7.3"
