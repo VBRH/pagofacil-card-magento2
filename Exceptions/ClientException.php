@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace PagoFacil\Payment\Exceptions;
 
 use PagoFacil\Payment\Exceptions\AbstractException;
-use Magento\Tests\NamingConvention\true\string;
+use Psr\Http\Client\ClientExceptionInterface;
 
-class AmountException extends AbstractException
+class ClientException extends AbstractException implements ClientExceptionInterface
 {
 
 }
