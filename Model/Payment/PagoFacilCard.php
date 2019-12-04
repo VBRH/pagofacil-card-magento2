@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Model\Payment;
 
+use Magento\Payment\Model\InfoInterface;
 use Magento\Payment\Model\Method\Cc;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment;
 use PagoFacil\Payment\Exceptions\AmountException;
 use PagoFacil\Payment\Model\Payment\Interfaces\Card;
-use Magento\Payment\Model\InfoInterface;
+use PagoFacil\Payment\Source\Client\ClientInterface;
 use PagoFacil\Payment\Source\Client\EndPoint;
 use PagoFacil\Payment\Source\Client\PagoFacil;
-use PagoFacil\Payment\Source\User\Client as UserClient;
 use PagoFacil\Payment\Source\Client\PagoFacil as Client;
 use PagoFacil\Payment\Source\Client\PrimitiveRequest;
-use PagoFacil\Payment\Source\Client\Response;
+use PagoFacil\Payment\Source\User\Client as UserClient;
 use Psr\Http\Message\RequestInterface;
-use Psr\Log\LoggerInterface;
 use Zend\Log\Logger;
 use Zend\Log\Writer\Stream;
 
@@ -62,7 +61,7 @@ class PagoFacilCard extends Cc implements Card
         ?\Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         ?\Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = []
-    ){
+    ) {
         parent::__construct(
             $context,
             $registry,
@@ -118,7 +117,7 @@ class PagoFacilCard extends Cc implements Card
 
     private function createRequestTransaction(): RequestInterface
     {
-        return new PrimitiveRequest('POST', [], []);
+        return new PrimitiveRequest(ClientInterface::POST, [], []);
     }
 
     /**
@@ -147,7 +146,6 @@ class PagoFacilCard extends Cc implements Card
 
         $payment->setAmount($amount);
         $order = $payment->getOrder();
-
 
         $payment->setAmount($amount);
 

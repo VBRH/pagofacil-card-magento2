@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Model;
 
-use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer;
+use Magento\Framework\Event\ObserverInterface;
 use Psr\Log\LoggerInterface;
 
 class Layout implements ObserverInterface
