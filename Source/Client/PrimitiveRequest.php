@@ -19,7 +19,7 @@ class PrimitiveRequest extends Request
      * @param array $body
      * @param string $version
      */
-    public function __construct(string $method, array $headers = [], array $body, string $version = '1.1')
+    public function __construct(string $method, array $body, array $headers = [], string $version = '1.1')
     {
         parent::__construct($method, $headers, 'nobody', $version);
         $this->primitiveBody = $body;

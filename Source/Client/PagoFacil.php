@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Source\Client;
 
-use Magento\Tests\NamingConvention\true\string;
 use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Source\Client\ClientInterface as HTTPInterface;
 use Psr\Http\Client\ClientInterface;
