@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Source\Client;
 
-
 class EndPoint
 {
     /** @var string $url */

@@ -6,16 +6,16 @@ namespace PagoFacil\Payment\Source\Client;
 
 interface ClientInterface
 {
-    const GET = 'GET';
-    const HEAD = 'HEAD';
-    const POST = 'POST';
-    const PUT = 'PUT';
-    const DELETE = 'DELETE';
-    const CONNECT = 'CONNECT';
-    const OPTIONS = 'OPTIONS';
-    const TRACE = 'TRACE';
-    const PATCH = 'PATCH';
-    const PHRASES = [
+    public const GET = 'GET';
+    public const HEAD = 'HEAD';
+    public const POST = 'POST';
+    public const PUT = 'PUT';
+    public const DELETE = 'DELETE';
+    public const CONNECT = 'CONNECT';
+    public const OPTIONS = 'OPTIONS';
+    public const TRACE = 'TRACE';
+    public const PATCH = 'PATCH';
+    public const PHRASES = [
         100 => 'Continue',
         101 => 'Switching Protocols',
         102 => 'Processing',
@@ -75,4 +75,6 @@ interface ClientInterface
         508 => 'Loop Detected',
         511 => 'Network Authentication Required',
     ];
+    public const METHOD_TRANSACTION = 'transaccion';
+    public const METHOD_VERIFY = 'verificar';
 }

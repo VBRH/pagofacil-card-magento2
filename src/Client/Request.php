@@ -38,7 +38,6 @@ class Request implements RequestInterface
         $this->headers = $headers;
         $this->body = $body;
         $this->version = $version;
-
     }
 
     public function getMethod()

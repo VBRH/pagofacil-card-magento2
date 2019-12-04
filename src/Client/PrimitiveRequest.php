@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Source\Client;
 
-use PagoFacil\Payment\Source\Client\Request;
-
 class PrimitiveRequest extends Request
 {
     /** @var array $primitiveBody */

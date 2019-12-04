@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace PagoFacil\Payment\Source\Client;
 
 use InvalidArgumentException;
+use PagoFacil\Payment\Exceptions\HttpException;
+use PagoFacil\Payment\Source\Client\ClientInterface as HTTPInterface;
 use Psr\Http\Message\ResponseInterface;
 
 class Response implements ResponseInterface
@@ -33,6 +35,20 @@ class Response implements ResponseInterface
     public function getStatusCode()
     {
         return $this->statusCode;
+    }
+
+    /**
+     * @param int $statusCode
+     * @return string
+     * @throws HttpException
+     */
+    public function getStatusCodeText(int $statusCode):string
+    {
+        if (!array_key_exists($statusCode, HTTPInterface::PHRASES)) {
+            throw new HttpException('');
+        }
+
+        return HTTPInterface::PHRASES[$statusCode];
     }
 
     /**
