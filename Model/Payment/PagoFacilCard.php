@@ -95,15 +95,19 @@ class PagoFacilCard extends Cc implements Card
         $this->_code = static::CODE;
 
         if ($this->getConfigData('is_sandbox')) {
-            $url = $this->getConfigData('endpoint_sandgbox');
+            $url = $this->getConfigData('endpoint_sandbox');
         } else {
             $url = $this->getConfigData('endpoint_production');
         }
+        $this->zendLogger->debug("is sandbox: {$this->getConfigData('is_sandbox')}");
+        $this->zendLogger->debug("url: {$url}");
 
         $this->endpoint = new EndPoint(
-            $this->getConfigData($url),
-            $this->getConfigData('uri_transacton')
+            $url,
+            $this->getConfigData('uri_transaction')
         );
+
+        $this->zendLogger->debug("Url completa: {$this->endpoint->getCompleteUrl()}");
 
         $this->user = new UserClient(
             $this->getConfigData('display_user_id'),
@@ -115,9 +119,13 @@ class PagoFacilCard extends Cc implements Card
         $this->client = new Client($this->user->getEndpoint()->getCompleteUrl());
     }
 
-    private function createRequestTransaction(): RequestInterface
+    private function createRequestTransaction(Order $order, Payment $payment): RequestInterface
     {
-        return new PrimitiveRequest(ClientInterface::POST, [], []);
+        return new PrimitiveRequest(
+            ClientInterface::POST,
+            PrimitiveRequest::transformData($order, $payment, $this->user),
+            []
+        );
     }
 
     /**

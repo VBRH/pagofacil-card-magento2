@@ -16,7 +16,6 @@
         "files": [ "registration.php" ],
         "psr-4": {
             "Pagofacil\\Payment\\": "",
-            "Pagofacil\\Payment\\Source\\": "src/"
 
         }
     },
