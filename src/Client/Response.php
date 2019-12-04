@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace PagoFacil\Payment\Source\Client;
 
 use InvalidArgumentException;
-use Magento\Tests\NamingConvention\true\string;
 use Psr\Http\Message\ResponseInterface;
 
 class Response implements ResponseInterface

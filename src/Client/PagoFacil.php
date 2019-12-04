@@ -7,6 +7,7 @@ namespace PagoFacil\Payment\Source\Client;
 use Magento\Tests\NamingConvention\true\string;
 use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Source\Client\Response;
+use PagoFacil\Payment\Source\Client\ClientInterface as HTTPInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -52,6 +53,10 @@ class PagoFacil implements ClientInterface
         $simpleResponse = curl_exec($this->curl);
         $info = curl_getinfo($this->curl);
         $error = curl_error($this->curl);
+
+        $statusCodeText = HTTPInterface::PHRASES[
+            $info['http_code']
+        ];
 
         curl_close($this->curl);
 
