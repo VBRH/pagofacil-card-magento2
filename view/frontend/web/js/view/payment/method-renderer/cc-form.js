@@ -43,13 +43,13 @@ define([
                 return $form.validation() && $form.validation('isValid');
             }
         },
-        getCustomerFullName: function() {
+        getCustomerFullName: function () {
             let customerFirstName = quote.billingAddress._latestValue.firstname;
             let customerLastName = quote.billingAddress._latestValue.lastname;
 
             return customerFirstName + ' ' + customerLastName;
         },
-        validateAddress: function() {
+        validateAddress: function () {
             let customerData = quote.billingAddress._latestValue;
             let address = undefined;
 

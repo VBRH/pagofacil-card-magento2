@@ -1,4 +1,5 @@
-export function createObjectExtends(Component) {
+export function createObjectExtends(Component)
+{
     let objectExtends = {};
 
     return objectExtends;
