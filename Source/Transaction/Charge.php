@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Source\Transaction;
 
-class Charge
+use PagoFacil\Payment\Source\Interfaces\Dto;
+
+class Charge implements Dto
 {
     /** @var string $id */
     private $id;
@@ -69,5 +71,19 @@ class Charge
     public function getCode(): int
     {
         return $this->code;
+    }
+
+    /**
+     * @param Charge $charge
+     * @param int $code
+     * @param string $statusCode
+     * @return static
+     */
+    static public function setCode(self $charge, int $code, string $statusCode): self
+    {
+        $charge->code = $code;
+        $charge->statusCode = $statusCode;
+
+        return $charge;
     }
 }
