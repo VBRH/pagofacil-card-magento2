@@ -32,7 +32,6 @@ class Charge implements Dto
         $this->message = $message;
     }
 
-
     /**
      * @return string
      */
@@ -79,7 +78,7 @@ class Charge implements Dto
      * @param string $statusCode
      * @return static
      */
-    static public function setCode(self $charge, int $code, string $statusCode): self
+    public static function setCode(self $charge, int $code, string $statusCode): self
     {
         $charge->code = $code;
         $charge->statusCode = $statusCode;
