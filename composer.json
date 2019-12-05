@@ -4,6 +4,7 @@
     "require": {
         "php": "~7.3",
         "ext-curl": "*",
+        "ext-json": "*",
         "psr/http-client": "1.0.*",
         "psr/http-message": "1.0.*"
     },
@@ -16,8 +17,7 @@
     "autoload": {
         "files": [ "registration.php" ],
         "psr-4": {
-            "Pagofacil\\Payment\\": "",
-
+            "Pagofacil\\Payment\\": ""
         }
     },
     "autoload-dev":{
