@@ -30,6 +30,7 @@ class PagoFacil implements ClientInterface
      */
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
+        /** @var string $simpleResponse */
         $simpleResponse = null;
         /** @var string $error */
         $error = null;

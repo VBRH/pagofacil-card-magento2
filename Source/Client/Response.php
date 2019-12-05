@@ -9,6 +9,8 @@ use PagoFacil\Payment\Exceptions\HttpException;
 use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Source\Client\ClientInterface as HTTPInterface;
 use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
+use PagoFacil\Payment\Source\Interfaces\Dto;
+use PagoFacil\Payment\Source\Transaction\Charge;
 use Psr\Http\Message\StreamInterface;
 
 class Response implements PagoFacilResponseInterface
@@ -31,6 +33,7 @@ class Response implements PagoFacilResponseInterface
         $this->validateStatusCodeRange($statusCode);
         $this->statusCode = $statusCode;
         $this->body = $body;
+        $this->parseJsonToArray();
     }
 
     /**
@@ -74,10 +77,15 @@ class Response implements PagoFacilResponseInterface
         }
     }
 
-    private function parceJsonToArray(): void
+    protected function parseJsonToArray(): void
     {
         $arrayResponse = json_decode($this->body, true);
         $this->arrayTransaction = $arrayResponse['WebServices_Transacciones'];
+    }
+
+    public function getBodyToArray(): array
+    {
+        return $this->arrayTransaction;
     }
 
     /**
@@ -86,12 +94,29 @@ class Response implements PagoFacilResponseInterface
     public function validateAuthorized(): void
     {
         if (!array_key_exists('autorizacion', $this->arrayTransaction['transaccion'])) {
-
-            throw PaymentException::denied($this->arrayTransaction['transaccion']['pf_message']);
-
+            throw PaymentException::denied(
+                $this->arrayTransaction['transaccion']['pf_message'],
+                1,
+                $this->getTransactionError(
+                    $this->getTransaction()
+                )
+            );
         }
     }
 
+    private function getTransactionError(Dto $charge): Charge
+    {
+        return Charge::setCode($charge, 1, 'deny_transaction');
+    }
+
+    public function getTransaction(): Charge
+    {
+        return new Charge(
+            $this->getBodyToArray()['idTransaccion'],
+            $this->getBodyToArray()['data']['idPedido'],
+            $this->getBodyToArray()['pf_message']
+        );
+    }
     /**
      * @inheritDoc
      */

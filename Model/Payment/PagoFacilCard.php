@@ -4,18 +4,31 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Model\Payment;
 
+use Magento\Framework\Api\AttributeValueFactory;
+use Magento\Framework\Api\ExtensionAttributesFactory;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Data\Collection\AbstractDb;
+use Magento\Framework\Model\Context;
+use Magento\Framework\Model\ResourceModel\AbstractResource;
+use Magento\Framework\Module\ModuleListInterface;
+use Magento\Framework\Registry;
+use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
+use Magento\Payment\Helper\Data;
 use Magento\Payment\Model\InfoInterface;
 use Magento\Payment\Model\Method\Cc;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment;
 use PagoFacil\Payment\Exceptions\AmountException;
+use PagoFacil\Payment\Exceptions\ClientException;
+use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Model\Payment\Interfaces\Card;
 use PagoFacil\Payment\Source\Client\ClientInterface;
 use PagoFacil\Payment\Source\Client\EndPoint;
-use PagoFacil\Payment\Source\Client\PagoFacil;
+use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
 use PagoFacil\Payment\Source\Client\PagoFacil as Client;
 use PagoFacil\Payment\Source\Client\PrimitiveRequest;
 use PagoFacil\Payment\Source\User\Client as UserClient;
+use PagoFacil\Payment\Source\Interfaces\Dto;
 use Psr\Http\Message\RequestInterface;
 use Zend\Log\Logger;
 use Zend\Log\Writer\Stream;
@@ -35,31 +48,31 @@ class PagoFacilCard extends Cc implements Card
 
     /**
      * PagoFacilCard constructor.
-     * @param \Magento\Framework\Model\Context $context
-     * @param \Magento\Framework\Registry $registry
-     * @param \Magento\Framework\Api\ExtensionAttributesFactory $extensionFactory
-     * @param \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory
-     * @param \Magento\Payment\Helper\Data $paymentData
-     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
+     * @param Context $context
+     * @param Registry $registry
+     * @param ExtensionAttributesFactory $extensionFactory
+     * @param AttributeValueFactory $customAttributeFactory
+     * @param Data $paymentData
+     * @param ScopeConfigInterface $scopeConfig
      * @param \Magento\Payment\Model\Method\Logger $logger
-     * @param \Magento\Framework\Module\ModuleListInterface $moduleList
-     * @param \Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate
-     * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
-     * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
+     * @param ModuleListInterface $moduleList
+     * @param TimezoneInterface $localeDate
+     * @param AbstractResource|null $resource
+     * @param AbstractDb|null $resourceCollection
      * @param array $data
      */
     public function __construct(
-        \Magento\Framework\Model\Context $context,
-        \Magento\Framework\Registry $registry,
-        \Magento\Framework\Api\ExtensionAttributesFactory $extensionFactory,
-        \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory,
-        \Magento\Payment\Helper\Data $paymentData,
-        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
+        Context $context,
+        Registry $registry,
+        ExtensionAttributesFactory $extensionFactory,
+        AttributeValueFactory $customAttributeFactory,
+        Data $paymentData,
+        ScopeConfigInterface $scopeConfig,
         \Magento\Payment\Model\Method\Logger $logger,
-        \Magento\Framework\Module\ModuleListInterface $moduleList,
-        \Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate,
-        ?\Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
-        ?\Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
+        ModuleListInterface $moduleList,
+        TimezoneInterface $localeDate,
+        ?AbstractResource $resource = null,
+        ?AbstractDb $resourceCollection = null,
         array $data = []
     ) {
         parent::__construct(
@@ -142,6 +155,7 @@ class PagoFacilCard extends Cc implements Card
      * @param InfoInterface $payment
      * @param float $amount
      * @return self
+     * @throws AmountException
      */
     public function capture(InfoInterface $payment, $amount): self
     {
@@ -153,11 +167,22 @@ class PagoFacilCard extends Cc implements Card
         /** @var Order $order */
 
         $payment->setAmount($amount);
-        $order = $payment->getOrder();
 
-        $payment->setAmount($amount);
+        try {
+            $this->authorize($payment, $amount);
 
-        if ($this->isEmpty($payment->getLastTransId())) {
+            $payment->setIsTransactionClosed(true);
+        } catch (ClientException $exception) {
+            $this->zendLogger->err($exception->getMessage(), $exception->getTrace());
+            $payment->setIsTransactionClosed(false);
+            $payment->setIsTransactionPending(true);
+            $payment->save();
+        } catch (PaymentException $exception) {
+            $this->zendLogger->err($exception->getMessage(), $exception->getTrace());
+            $payment->setTransactionId($exception->getCharge()->getId());
+            $payment->setIsTransactionClosed(false);
+            $payment->setIsTransactionPending(true);
+            $payment->save();
         }
 
         return $this;
@@ -166,11 +191,36 @@ class PagoFacilCard extends Cc implements Card
     /**
      * @param InfoInterface $payment
      * @param float $amount
+     * @throws ClientException
+     * @throws PaymentException
      */
     public function authorize(InfoInterface $payment, $amount): void
     {
         /** @var Payment $payment */
         /** @var Order $order */
         $order = $payment->getOrder();
+        /** @var PagoFacilResponseInterface $response */
+        $response = $this->client->sendRequest(
+            $this->createRequestTransaction(
+                $order,
+                $payment
+            )
+        );
+
+        $response->validateAuthorized();
+
+        $charge = $response->getTransaction();
+
+        $payment->setTransactionId($charge->getId());
+        $payment->save();
+    }
+
+    /**
+     * @param PagoFacilResponseInterface $response
+     * @return Dto
+     */
+    public function getTransaction(PagoFacilResponseInterface $response): Dto
+    {
+        return $response->getTransaction();
     }
 }

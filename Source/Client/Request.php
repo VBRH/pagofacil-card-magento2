@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Source\Client;
 
-use http\Exception\InvalidArgumentException;
+use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;

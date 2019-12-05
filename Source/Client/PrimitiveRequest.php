@@ -33,7 +33,7 @@ class PrimitiveRequest extends Request
         return urldecode(http_build_query($this->primitiveBody));
     }
 
-    static public function transformData(Order $order, Order\Payment $payment, Client $user): array
+    public static function transformData(Order $order, Order\Payment $payment, Client $user): array
     {
         return [
             'method' => ClientInterface::METHOD_TRANSACTION,
