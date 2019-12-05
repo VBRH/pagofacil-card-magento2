@@ -6,15 +6,18 @@ namespace PagoFacil\Payment\Source\Client;
 
 use InvalidArgumentException;
 use PagoFacil\Payment\Exceptions\HttpException;
+use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Source\Client\ClientInterface as HTTPInterface;
-use Psr\Http\Message\ResponseInterface;
+use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
 
-class Response implements ResponseInterface
+class Response implements PagoFacilResponseInterface
 {
     /** @var int $statusCode */
     private $statusCode;
     /** @var string $body */
     private $body;
+    /** @var array $arrayTransaction */
+    private $arrayTransaction;
 
     /**
      * Response constructor.
@@ -45,7 +48,7 @@ class Response implements ResponseInterface
     public function getStatusCodeText(int $statusCode):string
     {
         if (!array_key_exists($statusCode, HTTPInterface::PHRASES)) {
-            throw new HttpException('');
+            throw new HttpException('invalid_http_code');
         }
 
         return HTTPInterface::PHRASES[$statusCode];
@@ -56,7 +59,7 @@ class Response implements ResponseInterface
      */
     public function getBody()
     {
-        return $this->getBody();
+        return $this->body;
     }
 
     /**
@@ -67,6 +70,24 @@ class Response implements ResponseInterface
     {
         if (100 > $code || 600 <= $code) {
             throw new \InvalidArgumentException('status code out of the range');
+        }
+    }
+
+    private function parceJsonToArray(): void
+    {
+        $arrayResponse = json_decode($this->body, true);
+        $this->arrayTransaction = $arrayResponse['WebServices_Transacciones'];
+    }
+
+    /**
+     * @throws PaymentException
+     */
+    public function validateAuthorized(): void
+    {
+        if (!array_key_exists('autorizacion', $this->arrayTransaction['transaccion'])) {
+
+            throw PaymentException::denied($this->arrayTransaction['transaccion']['pf_message']);
+
         }
     }
 }
