@@ -15,7 +15,6 @@ define([
             return this;
         },
         getCode: function () {
-            console.log(this.isPlaceOrderActionAllowed());
             return 'pagofacil_card';
         },
         isActive: function () {
@@ -38,16 +37,7 @@ define([
         preparePayment: function () {
             let $form = $('#' + this.getCode() + '-form');
 
-            if ($form.validation() && $form.validation('isValid')) {
-            } else {
-                return $form.validation() && $form.validation('isValid');
-            }
-        },
-        getCustomerFullName: function () {
-            let customerFirstName = quote.billingAddress._latestValue.firstname;
-            let customerLastName = quote.billingAddress._latestValue.lastname;
-
-            return customerFirstName + ' ' + customerLastName;
+            return $form.validation() && $form.validation('isValid');
         },
         validateAddress: function () {
             let customerData = quote.billingAddress._latestValue;
@@ -73,7 +63,7 @@ define([
                 state: customerData.region,
                 line1: customerData.street[0],
                 line2: customerData.street[1]
-            }
+            };
 
             return address;
         }
