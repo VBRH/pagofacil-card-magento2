@@ -112,9 +112,9 @@ class Response implements PagoFacilResponseInterface
     public function getTransaction(): Charge
     {
         return new Charge(
-            $this->getBodyToArray()['idTransaccion'],
-            $this->getBodyToArray()['data']['idPedido'],
-            $this->getBodyToArray()['pf_message']
+            $this->getBodyToArray()['transaccion']['idTransaccion'],
+            $this->getBodyToArray()['transaccion']['data']['idPedido'],
+            $this->getBodyToArray()['transaccion']['pf_message']
         );
     }
     /**
