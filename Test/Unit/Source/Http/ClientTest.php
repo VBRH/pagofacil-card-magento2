@@ -52,6 +52,16 @@ class ClientTest extends TestCase
      */
     public function ClientMockup(): void
     {
+        $response = new Response(
+            json_encode($this->responseData()),
+            200
+        );
+
+        $request = new PrimitiveRequest(
+            ClientInterface::POST,
+            $this->requestData()
+        );
+
         $client = $this->getMockBuilder(PagoFacil::class)
             ->setConstructorArgs(['https://demo.url'])
             ->setMethods(['sendRequest'])
