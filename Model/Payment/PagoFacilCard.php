@@ -8,6 +8,7 @@ use Magento\Framework\Api\AttributeValueFactory;
 use Magento\Framework\Api\ExtensionAttributesFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Data\Collection\AbstractDb;
+use Magento\Framework\DataObject;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Module\ModuleListInterface;
@@ -16,6 +17,7 @@ use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Payment\Helper\Data;
 use Magento\Payment\Model\InfoInterface;
 use Magento\Payment\Model\Method\Cc;
+use Magento\Payment\Model\Method\Logger;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment;
 use PagoFacil\Payment\Exceptions\AmountException;
@@ -29,16 +31,13 @@ use PagoFacil\Payment\Source\Client\PagoFacil as Client;
 use PagoFacil\Payment\Source\Client\PrimitiveRequest;
 use PagoFacil\Payment\Source\User\Client as UserClient;
 use PagoFacil\Payment\Source\Interfaces\Dto;
+use PagoFacil\Payment\Source\Logger as PagoFacilLogger;
 use Psr\Http\Message\RequestInterface;
-use Zend\Log\Logger;
-use Zend\Log\Writer\Stream;
 
 class PagoFacilCard extends Cc implements Card
 {
-    /** @var Logger $zendLogger */
-    private $zendLogger;
-    /** @var Stream */
-    private $zendWriter;
+    use PagoFacilLogger;
+
     /** @var EndPoint $endpoint */
     private $endpoint;
     /** @var UserClient $user */
@@ -54,7 +53,7 @@ class PagoFacilCard extends Cc implements Card
      * @param AttributeValueFactory $customAttributeFactory
      * @param Data $paymentData
      * @param ScopeConfigInterface $scopeConfig
-     * @param \Magento\Payment\Model\Method\Logger $logger
+     * @param Logger $logger
      * @param ModuleListInterface $moduleList
      * @param TimezoneInterface $localeDate
      * @param AbstractResource|null $resource
@@ -68,13 +67,20 @@ class PagoFacilCard extends Cc implements Card
         AttributeValueFactory $customAttributeFactory,
         Data $paymentData,
         ScopeConfigInterface $scopeConfig,
-        \Magento\Payment\Model\Method\Logger $logger,
+        Logger $logger,
         ModuleListInterface $moduleList,
         TimezoneInterface $localeDate,
         ?AbstractResource $resource = null,
         ?AbstractDb $resourceCollection = null,
         array $data = []
     ) {
+        $this->createLocalLogger(static::CODE);
+        $this->_isGateway = true;
+        $this->_canCapture = true;
+        $this->_canCapturePartial = true;
+        $this->_canRefund = true;
+        $this->_code = static::CODE;
+
         parent::__construct(
             $context,
             $registry,
@@ -90,37 +96,16 @@ class PagoFacilCard extends Cc implements Card
             $data
         );
 
-        $this->createLocalLogger(static::CODE);
-
-        $this->_isGateway = true;
-        $this->_canOrder = true;
-        $this->_canAuthorize = true;
-        $this->_canCapture = true;
-        $this->_canCapturePartial = true;
-        $this->_canRefund = true;
-        $this->_canRefundInvoicePartial = true;
-        $this->_debugReplacePrivateDataKeys = [
-            'number',
-            'exp_month',
-            'exp_year',
-            'cvc'
-        ];
-        $this->_code = static::CODE;
-
         if ($this->getConfigData('is_sandbox')) {
             $url = $this->getConfigData('endpoint_sandbox');
         } else {
             $url = $this->getConfigData('endpoint_production');
         }
-        $this->zendLogger->debug("is sandbox: {$this->getConfigData('is_sandbox')}");
-        $this->zendLogger->debug("url: {$url}");
 
         $this->endpoint = new EndPoint(
             $url,
             $this->getConfigData('uri_transaction')
         );
-
-        $this->zendLogger->debug("Url completa: {$this->endpoint->getCompleteUrl()}");
 
         $this->user = new UserClient(
             $this->getConfigData('display_user_id'),
@@ -130,6 +115,9 @@ class PagoFacilCard extends Cc implements Card
         );
 
         $this->client = new Client($this->user->getEndpoint()->getCompleteUrl());
+
+        $this->zendLogger->info('Construct');
+        $this->zendLogger->debug('----------');
     }
 
     private function createRequestTransaction(Order $order, Payment $payment): RequestInterface
@@ -142,13 +130,16 @@ class PagoFacilCard extends Cc implements Card
     }
 
     /**
-     * @param string $logName
-     * @return void
+     * @param DataObject $data
+     * @return Cc
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
-    protected function createLocalLogger(string $logName): void
+    public function assignData(DataObject $data)
     {
-        $this->zendLogger = new Logger();
-        $this->zendLogger->addWriter(new Stream(BP . "/var/log/{$logName}.log"));
+        $this->zendLogger->debug(DataObject::class);
+        parent::assignData($data);
+
+        return $this;
     }
 
     /**
@@ -165,11 +156,11 @@ class PagoFacilCard extends Cc implements Card
 
         /** @var Payment $payment */
         /** @var Order $order */
+        $this->zendLogger->info("Estamos en capture function: ", $payment->getStoredData());
 
         $payment->setAmount($amount);
 
         try {
-            $this->authorize($payment, $amount);
 
             $payment->setIsTransactionClosed(true);
         } catch (ClientException $exception) {
@@ -183,36 +174,28 @@ class PagoFacilCard extends Cc implements Card
             $payment->setIsTransactionClosed(false);
             $payment->setIsTransactionPending(true);
             $payment->save();
+
         }
 
         return $this;
     }
 
-    /**
-     * @param InfoInterface $payment
-     * @param float $amount
-     * @throws ClientException
-     * @throws PaymentException
-     */
-    public function authorize(InfoInterface $payment, $amount): void
+    public function refund(InfoInterface $payment, $amount)
     {
-        /** @var Payment $payment */
-        /** @var Order $order */
-        $order = $payment->getOrder();
-        /** @var PagoFacilResponseInterface $response */
-        $response = $this->client->sendRequest(
-            $this->createRequestTransaction(
-                $order,
-                $payment
-            )
-        );
+        $this->zendLogger->info('refund');
+        return $this;
+    }
 
-        $response->validateAuthorized();
+    public function validate()
+    {
+        $this->zendLogger->info('validate');
+        return $this;
+    }
 
-        $charge = $response->getTransaction();
-
-        $payment->setTransactionId($charge->getId());
-        $payment->save();
+    public function authorize(InfoInterface $payment, $amount)
+    {
+        $this->zendLogger->info('auth');
+        return $this;
     }
 
     /**
