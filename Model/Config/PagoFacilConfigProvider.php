@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace PagoFacil\Payment\Model\Config;
 
 use Magento\Checkout\Model\ConfigProviderInterface;
+use Magento\Framework\UrlInterface;
 use Magento\Payment\Helper\Data;
 use PagoFacil\Payment\Model\Payment\PagoFacilCard;
 use Magento\Checkout\Model\Cart;
 use Magento\Payment\Model\Method\AbstractMethod;
+use Magento\Framework\App\ObjectManager;
 use PagoFacil\Payment\Model\Payment\Interfaces\Card;
 use PagoFacil\Payment\Source\Logger as PagoFacilLogger;
 use DateTime;
- use Generator;
+use Generator;
 
 class PagoFacilConfigProvider implements ConfigProviderInterface
 {
@@ -26,6 +28,8 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
     protected $payment;
     /** @var Cart $cart */
     protected $cart;
+    /** @var UrlInterface */
+    private $urlInterface;
 
     /**
      * PagoFacilConfigProvider constructor.
@@ -45,7 +49,7 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
         $this->methods = [];
 
         $this->methods[Card::CODE] = $data->getMethodInstance(Card::CODE);
-        $this->zendLogger->info('Estamos en el ConfigProvider');
+        $this->urlInterface = ObjectManager::getInstance()->get('Magento\Framework\UrlInterface');
     }
 
     /**
@@ -66,7 +70,9 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
                     'years' => [
                         Card::CODE => $this->getYears()
                     ],
-                    'ccvImageUrl' => [Card::CODE],
+                    'cvvImageUrl' => [
+                        Card::CODE => $this->urlInterface->getUrl('pub/static/frontend/Magento/luma/es_MX/Magento_Checkout/') .'cvv.png'
+                    ],
                     'ssStartYears' => [
                         Card::CODE => $this->getStartYear()
                     ],
@@ -133,7 +139,7 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
     protected function yearGenerator():Generator
     {
         $iterador = 0;
-        $year = intval((new DateTime())->format('y'));
+        $year = intval((new DateTime())->format('Y'));
 
         do{
             yield $year + $iterador;
@@ -143,7 +149,7 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
 
     protected function startYearGenerator():Generator
     {
-        $year = intval((new DateTime())->format('y'));
+        $year = intval((new DateTime())->format('Y'));
 
         for($iterador=5; $iterador>=0; $iterador--){
             yield ($year - $iterador);
