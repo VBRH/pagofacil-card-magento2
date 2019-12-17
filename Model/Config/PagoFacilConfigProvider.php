@@ -54,6 +54,9 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
     public function getConfig()
     {
         $this->zendLogger->info('getConfig');
+        if (!$this->methods[Card::CODE]->isAvailable()) {
+            return [];
+        }
         return [
             'payment' => [
                 'ccform' => [
@@ -140,12 +143,10 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
 
     protected function startYearGenerator():Generator
     {
-        $iterador = 5;
         $year = intval((new DateTime())->format('y'));
 
-        do{
-            yield $year - $iterador;
-            $iterador--;
-        }while(0 >= $iterador);
+        for($iterador=5; $iterador>=0; $iterador--){
+            yield ($year - $iterador);
+        }
     }
 }
