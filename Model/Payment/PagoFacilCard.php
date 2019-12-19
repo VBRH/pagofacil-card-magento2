@@ -142,7 +142,6 @@ class PagoFacilCard extends Cc implements Card
      */
     public function capture(InfoInterface $payment, $amount): self
     {
-        $this->zendLogger->debug('holis, desde capture');
         /** @var Payment $payment */
         /** @var Order $order */
 
@@ -171,15 +170,12 @@ class PagoFacilCard extends Cc implements Card
 
     public function authorize(InfoInterface $payment, $amount)
     {
-        $this->zendLogger->debug('holis, desde auth');
         /** @var Payment $payment */
         /** @var Order $order */
         /** @var Charge $charge */
 
         $request = $this->createRequestTransaction($payment->getOrder(), $payment);
-
         $response = $this->client->sendRequest($request);
-
         $charge = $this->getTransaction($response);
 
         $payment->setTransactionId($charge->getId());
