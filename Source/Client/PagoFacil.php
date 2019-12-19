@@ -6,6 +6,7 @@ namespace PagoFacil\Payment\Source\Client;
 
 use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Source\Client\ClientInterface as HTTPInterface;
+use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -25,7 +26,7 @@ class PagoFacil implements ClientInterface
 
     /**
      * @param RequestInterface $request
-     * @return ResponseInterface
+     * @return PagoFacilResponseInterface
      * @throws ClientException
      */
     public function sendRequest(RequestInterface $request): ResponseInterface

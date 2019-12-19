@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Model\Config;
 
+use DateTime;
+use Generator;
+use Exception;
 use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Payment\Helper\Data;
-use PagoFacil\Payment\Model\Payment\PagoFacilCard;
 use Magento\Checkout\Model\Cart;
 use Magento\Payment\Model\Method\AbstractMethod;
 use Magento\Framework\App\ObjectManager;
+use PagoFacil\Payment\Model\Payment\PagoFacilCard;
 use PagoFacil\Payment\Model\Payment\Interfaces\Card;
 use PagoFacil\Payment\Source\Logger as PagoFacilLogger;
-use DateTime;
-use Generator;
 
 class PagoFacilConfigProvider implements ConfigProviderInterface
 {
@@ -54,6 +55,7 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
 
     /**
      * @return array
+     * @throws Exception
      */
     public function getConfig()
     {
@@ -94,6 +96,9 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
         ];
     }
 
+    /**
+     * @return array
+     */
     public function getMonths(): array
     {
         return [
@@ -112,6 +117,10 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
         ];
     }
 
+    /**
+     * @return array
+     * @throws Exception
+     */
     public function getYears(): array
     {
         $arrayYears = [];
@@ -124,6 +133,10 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
         return $arrayYears;
     }
 
+    /**
+     * @return array
+     * @throws Exception
+     */
     public function getStartYear(): array
     {
         $arrayYears = [];
@@ -136,6 +149,10 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
         return $arrayYears;
     }
 
+    /**
+     * @return Generator
+     * @throws Exception
+     */
     protected function yearGenerator():Generator
     {
         $iterador = 0;
@@ -147,6 +164,10 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
         }while(10 >= $iterador);
     }
 
+    /**
+     * @return Generator
+     * @throws Exception
+     */
     protected function startYearGenerator():Generator
     {
         $year = intval((new DateTime())->format('Y'));
