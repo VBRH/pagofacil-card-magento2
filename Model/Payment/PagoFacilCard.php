@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Model\Payment;
 
+use ArrayAccess;
 use Magento\Framework\Api\AttributeValueFactory;
 use Magento\Framework\Api\ExtensionAttributesFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -45,6 +46,7 @@ class PagoFacilCard extends Cc implements Card
     private $user;
     /** @var Client $client  */
     private $client;
+    private $monthlyInstallments;
 
     /**
      * PagoFacilCard constructor.
@@ -124,7 +126,7 @@ class PagoFacilCard extends Cc implements Card
      * @param Payment $payment
      * @return RequestInterface
      */
-    private function createRequestTransaction(Order $order, Payment $payment): RequestInterface
+    public function createRequestTransaction(Order $order, Payment $payment): RequestInterface
     {
         return new PrimitiveRequest(
             ClientInterface::POST,
@@ -192,5 +194,21 @@ class PagoFacilCard extends Cc implements Card
     public function getTransaction(PagoFacilResponseInterface $response): Dto
     {
         return $response->getTransaction();
+    }
+
+    /**
+     * @return array
+     */
+    public function getMonthlyInstallments(): array
+    {
+        /** @var array $months */
+        $months = explode(',', $this->monthlyInstallments);
+
+        if (!in_array("1", $months)) {
+            array_push($months, "1");
+        }
+        asort($months);
+
+        return $months;
     }
 }
