@@ -59,12 +59,12 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
      */
     public function getConfig()
     {
-        $this->zendLogger->info('getConfig');
         if (!$this->methods[Card::CODE]->isAvailable()) {
             return [];
         }
         return [
             'payment' => [
+                'months_installments' => $this->payment->getMonthlyInstallments(),
                 'ccform' => [
                     'months' => [
                         Card::CODE => $this->getMonths()
@@ -73,7 +73,9 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
                         Card::CODE => $this->getYears()
                     ],
                     'cvvImageUrl' => [
-                        Card::CODE => $this->urlInterface->getUrl('pub/static/frontend/Magento/luma/es_MX/Magento_Checkout/') .'cvv.png'
+                        Card::CODE => $this->urlInterface->getUrl(
+                            'pub/static/frontend/Magento/luma/es_MX/Magento_Checkout/'
+                            ) .'cvv.png'
                     ],
                     'ssStartYears' => [
                         Card::CODE => $this->getStartYear()

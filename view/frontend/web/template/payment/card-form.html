@@ -21,6 +21,19 @@
         <!-- Render the native credit card form. -->
         <form class="form" data-bind="attr: {'id': getCode() + '-form'}">
             <!-- ko template: 'Magento_Payment/payment/cc-form' --><!-- /ko -->
+            <div class="field type">
+                <label class="label">meses sin intereses</label>
+                <div class="control">
+                    <select id="pagofacil_monthly_installments" name="monthly_installments" class="select"
+                            data-bind="options: getMonthlyInstallments(), optionsText: function(month) {
+                                if (1 == month) {
+                                    return 'En un solo pago';
+                                } else {
+                                    return month + ' meses';
+                                }
+                            }"></select>
+                </div>
+            </div>
         </form>
 
         <div class="checkout-agreements-block">
