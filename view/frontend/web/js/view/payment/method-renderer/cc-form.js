@@ -4,6 +4,24 @@ define([
 ], function (Component, $) {
     'use strict';
 
+    let total = window.checkoutConfig.payment.total;
+
+    $(document).on('change', '#pagofacil_monthly_installments', function () {
+        let monthly_payment = 0;
+        let months = parseInt($(this).val());
+
+        switch (true) {
+            case months > 1:
+                monthly_payment = (total/months).toFixed(2);
+                $('#total-monthly').css('display', 'inline');
+                break;
+            case months == 1:
+                $('#total-monthly').css('display', 'none');
+                break;
+        }
+        $("#monthly-payment").text(monthly_payment);
+    });
+
     return Component.extend({
         defaults: {
             template: 'Pagofacil_Card/payment/card-form'
@@ -28,6 +46,18 @@ define([
             });
 
             return arrayData;
+        },
+        getData: function () {
+            return {
+                'method': this.getCode(),
+                'additional_data': {
+                    'cc_cid': this.creditCardVerificationNumber(),
+                    'cc_type': this.creditCardType(),
+                    'cc_exp_year': this.creditCardExpYear(),
+                    'cc_exp_month': this.creditCardExpMonth(),
+                    'cc_number': this.creditCardNumber()
+                }
+            };
         }
     })
 });

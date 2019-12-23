@@ -20,6 +20,10 @@
 
         <!-- Render the native credit card form. -->
         <form class="form" data-bind="attr: {'id': getCode() + '-form'}">
+            <div class="label type">
+                <label class="label" >Municipio: </label>
+                <input  class="input-text" type="text" name="currentBillingAddress[municipality]">
+            </div>
             <!-- ko template: 'Magento_Payment/payment/cc-form' --><!-- /ko -->
             <div class="field type">
                 <label class="label">meses sin intereses</label>
@@ -32,6 +36,10 @@
                                     return month + ' meses';
                                 }
                             }"></select>
+                </div>
+                <div id="total-monthly" class="field-cost type" style="display: none">
+                    <label>Pago mensual: </label>
+                    <p>$<span id="monthly-payment"></span></p>
                 </div>
             </div>
         </form>
