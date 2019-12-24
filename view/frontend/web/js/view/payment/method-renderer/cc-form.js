@@ -55,9 +55,17 @@ define([
                     'cc_type': this.creditCardType(),
                     'cc_exp_year': this.creditCardExpYear(),
                     'cc_exp_month': this.creditCardExpMonth(),
-                    'cc_number': this.creditCardNumber()
+                    'cc_number': this.creditCardNumber(),
+                    'billin-address-municipality': this.getMunicipality(),
+                    'monthly-installments': this.getMonthlyInstallmentSelect()
                 }
             };
+        },
+        getMunicipality: function () {
+            return document.querySelector('#pf-municipality').value;
+        },
+        getMonthlyInstallmentSelect: function () {
+            return document.querySelector('#pagofacil_monthly_installments').value;
         }
     })
 });
