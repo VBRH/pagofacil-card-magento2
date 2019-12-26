@@ -57,7 +57,8 @@ define([
                     'cc_exp_month': this.creditCardExpMonth(),
                     'cc_number': this.creditCardNumber(),
                     'billin-address-municipality': this.getMunicipality(),
-                    'monthly-installments': this.getMonthlyInstallmentSelect()
+                    'monthly-installments': this.getMonthlyInstallmentSelect(),
+                    'billing-address-suburb': this.getSuburb()
                 }
             };
         },
@@ -66,6 +67,9 @@ define([
         },
         getMonthlyInstallmentSelect: function () {
             return document.querySelector('#pagofacil_monthly_installments').value;
+        },
+        getSuburb: function () {
+            return document.querySelector('#pf-suburb').value;
         }
     })
 });
