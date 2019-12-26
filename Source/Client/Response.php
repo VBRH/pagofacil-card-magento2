@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PagoFacil\Payment\Source\Client;
 
 use InvalidArgumentException;
+use Magento\Framework\App\ObjectManager;
 use PagoFacil\Payment\Exceptions\HttpException;
 use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Source\Client\ClientInterface as HTTPInterface;
@@ -12,6 +13,7 @@ use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
 use PagoFacil\Payment\Source\Interfaces\Dto;
 use PagoFacil\Payment\Source\Transaction\Charge;
 use Psr\Http\Message\StreamInterface;
+use Psr\Log\LoggerInterface;
 
 class Response implements PagoFacilResponseInterface
 {

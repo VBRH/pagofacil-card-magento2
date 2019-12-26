@@ -54,7 +54,7 @@ define([
                     'cc_cid': this.creditCardVerificationNumber(),
                     'cc_type': this.creditCardType(),
                     'cc_exp_year': this.creditCardExpYear(),
-                    'cc_exp_month': this.creditCardExpMonth(),
+                    'cc_exp_month': this.creditCardExpMonthUpdate(),
                     'cc_number': this.creditCardNumber(),
                     'billin-address-municipality': this.getMunicipality(),
                     'monthly-installments': this.getMonthlyInstallmentSelect(),
@@ -76,6 +76,19 @@ define([
         },
         getSuburb: function () {
             return document.querySelector('#pf-suburb').value;
+        },
+        creditCardExpMonthUpdate: function () {
+            let expiration = this.creditCardExpMonth();
+
+            if (undefined === expiration) {
+                return expiration;
+            }
+
+            if (1 === expiration.toString().length) {
+                expiration = '0'+ expiration;
+            }
+
+            return expiration;
         }
     })
 });
