@@ -35,7 +35,7 @@ final class Register
     public function get(string $key)
     {
         if (!$this->data->offsetExists($key)) {
-            throw new Exception('Key not exists');
+            throw new Exception("Key {$key} not exists");
         }
 
         return $this->data->offsetGet($key);
@@ -48,8 +48,8 @@ final class Register
      */
     public function set(string $key, $value): void
     {
-        if (!$this->data->offsetExists($key)) {
-            throw new Exception('The key are really exists');
+        if ($this->data->offsetExists($key)) {
+            throw new Exception("The key {$key} are really exists");
         }
 
         $this->data->offsetSet($key, $value);
@@ -76,11 +76,6 @@ final class Register
     {
     }
 
-    public function __destruct()
-    {
-        $this->data = null;
-    }
-
     /**
      * @param string $key
      * @param $value
@@ -99,5 +94,10 @@ final class Register
     static public function bringOut(string $key)
     {
         return static::getInstance()->get($key);
+    }
+
+    static public function getAll(): array
+    {
+        return static::getInstance()->data->getArrayCopy();
     }
 }
