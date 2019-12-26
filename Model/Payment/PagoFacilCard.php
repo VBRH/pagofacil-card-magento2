@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace PagoFacil\Payment\Model\Payment;
 
 use ArrayAccess;
+use ArrayObject;
+use Exception;
+use Magento\Customer\Model\CustomerFactory;
 use Magento\Framework\Api\AttributeValueFactory;
 use Magento\Framework\Api\ExtensionAttributesFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -21,6 +24,8 @@ use Magento\Payment\Model\Method\Cc;
 use Magento\Payment\Model\Method\Logger;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment;
+use Magento\Framework\App\ObjectManager;
+use Magento\Customer\Model\{Customer, Address};
 use PagoFacil\Payment\Exceptions\AmountException;
 use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\PaymentException;
@@ -30,11 +35,14 @@ use PagoFacil\Payment\Source\Client\EndPoint;
 use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
 use PagoFacil\Payment\Source\Client\PagoFacil as Client;
 use PagoFacil\Payment\Source\Client\PrimitiveRequest;
+use PagoFacil\Payment\Source\PaymentTranser;
 use PagoFacil\Payment\Source\Transaction\Charge;
 use PagoFacil\Payment\Source\User\Client as UserClient;
 use PagoFacil\Payment\Source\Interfaces\Dto;
 use PagoFacil\Payment\Source\Logger as PagoFacilLogger;
+use PagoFacil\Payment\Source\Register;
 use Psr\Http\Message\RequestInterface;
+use Psr\Log\LoggerInterface;
 
 class PagoFacilCard extends Cc implements Card
 {
@@ -62,6 +70,7 @@ class PagoFacilCard extends Cc implements Card
      * @param AbstractResource|null $resource
      * @param AbstractDb|null $resourceCollection
      * @param array $data
+     * @throws \Exception
      */
     public function __construct(
         Context $context,
@@ -82,7 +91,6 @@ class PagoFacilCard extends Cc implements Card
         $this->_canCapture = true;
         $this->_canAuthorize = true;
         $this->_canCapturePartial = true;
-        $this->_canRefund = true;
         $this->_code = static::CODE;
 
         parent::__construct(
@@ -106,6 +114,10 @@ class PagoFacilCard extends Cc implements Card
             $url = $this->getConfigData('endpoint_production');
         }
 
+        if ((integer)$this->getConfigData('monthy_installment_enabled')) {
+            $this->monthlyInstallments = $this->getConfigData('monthly_installments');
+        }
+
         $this->endpoint = new EndPoint(
             $url,
             $this->getConfigData('uri_transaction')
@@ -118,7 +130,18 @@ class PagoFacilCard extends Cc implements Card
             $this->endpoint
         );
 
-        $this->client = new Client($this->user->getEndpoint()->getCompleteUrl());
+        $this->zendLogger->err('constructor');
+
+        try {
+            Register::add('user', $this->user);
+            Register::add(
+                'client',
+                new Client($this->user->getEndpoint()->getCompleteUrl())
+            );
+        } catch (Exception $exception) {
+            $this->zendLogger->err($exception->getMessage());
+            $this->zendLogger->err(json_encode(Register::getAll()));
+        }
     }
 
     /**
@@ -130,9 +153,28 @@ class PagoFacilCard extends Cc implements Card
     {
         return new PrimitiveRequest(
             ClientInterface::POST,
-            PrimitiveRequest::transformData($order, $payment, $this->user),
+            PrimitiveRequest::transformData($payment->getOrder(), $payment, $this->user),
             []
         );
+    }
+
+    public function assignData(DataObject $data)
+    {
+        /** @var LoggerInterface $logger */
+        $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
+        parent::assignData($data);
+
+        Register::add('municipality', $data->getData('additional_data')['billin-address-municipality']);
+        Register::add('suburb', $data->getData('additional_data')['billin-address-municipality']);
+        Register::add('card_data', $data->getData('additional_data'));
+
+        $logger->warning(
+            json_encode(
+                Register::getAll()
+            )
+        );
+
+        return $this;
     }
 
     /**
@@ -144,28 +186,77 @@ class PagoFacilCard extends Cc implements Card
      */
     public function capture(InfoInterface $payment, $amount): self
     {
-        /** @var Payment $payment */
-        /** @var Order $order */
-
         if ($amount <= 0) {
             throw new AmountException('Invalid amount');
         }
 
-        try {
-            if (is_null($payment->getParentTransactionId())) {
-                $this->authorize($payment, $amount);
-            }
-            $payment->setIsTransactionClosed(true);
-        } catch (ClientException $exception) {
-            $payment->setIsTransactionClosed(false);
-            $payment->setIsTransactionPending(true);
-            $payment->save();
-        } catch (PaymentException $exception) {
-            $payment->setTransactionId($exception->getCharge()->getId());
-            $payment->setIsTransactionClosed(false);
-            $payment->setIsTransactionPending(true);
-            $payment->save();
-        }
+        /** @var Payment $payment */
+        /** @var Order $order */
+        /** @var UserClient $user */
+        /** @var Customer $customer */
+        /** @var LoggerInterface $logger */
+        /** @var Address $billingAddress */
+
+        $order = $payment->getOrder();
+        $paymentData = new ArrayObject(Register::bringOut('card_data'));
+        $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
+        $customer = ObjectManager::getInstance()->get(CustomerFactory::class)->create()->load($order->getCustomerId());
+        $billingAddress = $customer->getDefaultBillingAddress();
+        $user = Register::bringOut('user');
+
+        $data = [
+            'method' => ClientInterface::METHOD_TRANSACTION,
+            'data' => [
+                'idUsuario' => $user->getIdUser(),
+                'idSucursal' => $user->getIdBranchOffice(),
+                'idPedido' => '',
+                'monto' => $order->getGrandTotal(),
+                'plan' => 'NOR',
+                'mensualidad' => $paymentData->offsetGet('monthly-installments'),
+                'numeroTarjeta' => $paymentData->offsetGet('cc_number'),
+                'cvt' => $paymentData->offsetGet('cc_cid'),
+                'mesExpiracion' => $paymentData->offsetGet('cc_exp_month'),
+                'anyoExpiracion' => $paymentData->offsetGet('cc_exp_year'),
+                'nombre' => $order->getCustomerName(),
+                'apellidos' => $order->getCustomerLastname(),
+                'cp' => $billingAddress->getPostcode(),
+                'email' => $order->getCustomerEmail(),
+                'telefono' => $billingAddress->getTelephone(),
+                'celular' => $billingAddress->getTelephone(),
+                'calleyNumero' => $billingAddress->getStreet(),
+                'colonia' => Register::bringOut('suburb'),
+                'municipio' => Register::bringOut('municipality'),
+                'pais' => 'México',
+                'estado' => $billingAddress->getRegion()
+            ]
+        ];
+
+        $logger->alert(
+            json_encode(
+                $data
+            )
+        );
+
+        throw new PaymentException('algo mas feo');
+        $this->authorize($payment, $amount);
+
+        $payment->setIsTransactionClosed(true);
+
+        //try {
+        //    if (is_null($payment->getParentTransactionId())) {
+        //        $this->authorize($payment, $amount);
+        //    }
+        //    $payment->setIsTransactionClosed(true);
+        //} catch (ClientException $exception) {
+        //    $payment->setIsTransactionClosed(false);
+        //    $payment->setIsTransactionPending(true);
+        //    $payment->save();
+        //} catch (PaymentException $exception) {
+        //    $payment->setTransactionId($exception->getCharge()->getId());
+        //    $payment->setIsTransactionClosed(false);
+        //    $payment->setIsTransactionPending(true);
+        //    $payment->save();
+        //}
 
         return $this;
     }
@@ -175,13 +266,27 @@ class PagoFacilCard extends Cc implements Card
         /** @var Payment $payment */
         /** @var Order $order */
         /** @var Charge $charge */
+        /** @var LoggerInterface $logger */
+        if ($amount <= 0) {
+            throw new AmountException('Invalid amount auth');
+        }
+        $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
 
-        $request = $this->createRequestTransaction($payment->getOrder(), $payment);
-        $response = $this->client->sendRequest($request);
-        $charge = $this->getTransaction($response);
+        $logger->info(
+            'auth'
+        );
 
-        $payment->setTransactionId($charge->getId());
-        $payment->setParentTransactionId($charge->getId());
+        //$request = $this->createRequestTransaction($payment->getOrder(), $payment);
+        //$response = $this->client->sendRequest($request);
+        //$charge = $this->getTransaction($response);
+
+        //$payment->setTransactionId($charge->getId());
+        //$payment->setParentTransactionId($charge->getId());
+        //$payment->setIsTransactionClosed(false);
+
+        //$response->validateAuthorized();
+        $payment->setTransactionId(65421);
+        $payment->setParentTransactionId(65421);
         $payment->setIsTransactionClosed(false);
 
         return $this;
