@@ -11,6 +11,7 @@ use Psr\Http\Message\UriInterface;
 
 class Request implements RequestInterface
 {
+
     /** @var string $method */
     private $method;
     /** @var array $headers */
@@ -31,7 +32,7 @@ class Request implements RequestInterface
      */
     public function __construct(
         string $method,
-        array $headers = [],
+        array $headers,
         $body,
         string $version = '1.1'
     ) {
