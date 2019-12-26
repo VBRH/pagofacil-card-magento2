@@ -4,66 +4,42 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Source\Client;
 
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\HTTP\Client\Curl;
+use Magento\Framework\HTTP\ClientInterface as HttpClientInterface;
 use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Source\Client\ClientInterface as HTTPInterface;
 use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
+use PagoFacil\Payment\Source\Register;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Log\LoggerInterface;
 
 class PagoFacil implements ClientInterface
 {
-    /** @var resource $curl */
-    private $curl;
+    /** @var HttpClientInterface $magentoClient */
+    private $magentoClient;
     /** @var string $url */
     private $url;
 
     public function __construct(string $url)
     {
-        $this->curl = curl_init();
+        $this->magentoClient = ObjectManager::getInstance()->get(HttpClientInterface::class);
         $this->url = $url;
     }
 
     /**
      * @param RequestInterface $request
      * @return PagoFacilResponseInterface
-     * @throws ClientException
      */
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
-        /** @var string $simpleResponse */
-        $simpleResponse = null;
-        /** @var string $error */
-        $error = null;
-        /** @var array $info */
-        $info = null;
+        /** @var LoggerInterface $logger */
+        $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
 
-        curl_setopt_array($this->curl, [
-            CURLOPT_URL => $this->url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => "",
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => false,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => $request->getMethod(),
-            CURLOPT_POSTFIELDS => $request->getBody(),
-        ]);
+        $this->magentoClient->post($this->url, $request->getBody());
 
-        $simpleResponse = curl_exec($this->curl);
-        $info = curl_getinfo($this->curl);
-        $error = curl_error($this->curl);
-
-        $statusCodeText = HTTPInterface::PHRASES[
-            $info['http_code']
-        ];
-
-        curl_close($this->curl);
-
-        if ($error) {
-            throw new ClientException($error, $info['http_code']);
-        }
-
-        return new Response($simpleResponse, intval($info['http_code']));
+        return new Response($this->magentoClient->getBody(), $this->magentoClient->getStatus());
     }
 }
