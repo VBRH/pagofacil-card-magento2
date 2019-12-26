@@ -24,6 +24,4 @@ interface Card
      * @return array
      */
     public function getMonthlyInstallments(): array;
-
-    public function createRequestTransaction(Order $order, Payment $payment): RequestInterface;
 }

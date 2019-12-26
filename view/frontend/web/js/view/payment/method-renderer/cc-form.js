@@ -68,7 +68,7 @@ define([
         getMonthlyInstallmentSelect: function () {
             let monthly = document.querySelector('#pagofacil_monthly_installments').value;
 
-            if (1 === monthly.length()) {
+            if (1 === monthly.toString().length) {
                 monthly = '0' +monthly;
             }
 
