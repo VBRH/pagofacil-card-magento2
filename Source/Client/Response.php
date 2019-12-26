@@ -36,6 +36,9 @@ class Response implements PagoFacilResponseInterface
         $this->statusCode = $statusCode;
         $this->body = $body;
         $this->parseJsonToArray();
+
+        /** @var LoggerInterface $logger */
+        $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
     }
 
     /**

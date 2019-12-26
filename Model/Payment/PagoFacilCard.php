@@ -221,8 +221,6 @@ class PagoFacilCard extends Cc implements Card
             ]
         ]);
 
-        $logger->info(json_encode(Register::bringOut('transaccion')));
-
         try {
             if (is_null($payment->getParentTransactionId())) {
                 $this->authorize($payment, $amount);
@@ -266,16 +264,13 @@ class PagoFacilCard extends Cc implements Card
         );
 
         $response = $httpClient->sendRequest($request);
+        $response->validateAuthorized();
         $charge = $this->getTransaction($response);
-        throw new ClientException('Auth ha fallado y así');
+        $logger->alert($charge->getMessage());
+        $logger->alert($charge->getOrderId());
 
         $payment->setTransactionId($charge->getId());
         $payment->setParentTransactionId($charge->getId());
-        $payment->setIsTransactionClosed(false);
-
-        $response->validateAuthorized();
-        $payment->setTransactionId(65421);
-        $payment->setParentTransactionId(65421);
         $payment->setIsTransactionClosed(false);
 
         return $this;
