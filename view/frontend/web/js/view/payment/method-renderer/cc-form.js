@@ -66,7 +66,13 @@ define([
             return document.querySelector('#pf-municipality').value;
         },
         getMonthlyInstallmentSelect: function () {
-            return document.querySelector('#pagofacil_monthly_installments').value;
+            let monthly = document.querySelector('#pagofacil_monthly_installments').value;
+
+            if (1 === monthly.length()) {
+                monthly = '0' +monthly;
+            }
+
+            return monthly;
         },
         getSuburb: function () {
             return document.querySelector('#pf-suburb').value;
