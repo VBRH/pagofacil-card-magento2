@@ -1,0 +1,28 @@
+{
+    "name": "pagofacilnet/card-magento2",
+    "description": "Demonstrates integration with payment gateway",
+    "require": {
+        "php": "~7.3",
+        "ext-curl": "*",
+        "ext-json": "*",
+        "psr/http-client": "1.0.*",
+        "psr/http-message": "1.0.*"
+    },
+    "type": "magento2-module",
+    "version": "100.0.3",
+    "license": [
+        "OSL-3.0",
+        "AFL-3.0"
+    ],
+    "autoload": {
+        "files": [ "registration.php" ],
+        "psr-4": {
+            "Pagofacil\\Payment\\": ""
+        }
+    },
+    "autoload-dev":{
+        "psr-4": {
+            "PagoFacil\\Payment\\Test\\": "Test/"
+        }
+    }
+}
