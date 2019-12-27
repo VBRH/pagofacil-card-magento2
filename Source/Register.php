@@ -62,10 +62,15 @@ final class Register
     public function deleteKey(string $key): void
     {
         if (!$this->data->offsetExists($key)) {
-            throw new Exception('Key not exists');
+            throw new Exception("Key {$key} not exists");
         }
 
         $this->data->offsetUnset($key);
+    }
+
+    public function deleteAll()
+    {
+        $this->data = null;
     }
 
     private function __wakeup()
@@ -99,5 +104,20 @@ final class Register
     static public function getAll(): array
     {
         return static::getInstance()->data->getArrayCopy();
+    }
+
+    static public function removeInstance(): void
+    {
+        static::getInstance()->deleteAll();
+        static::$instance = null;
+    }
+
+    /**
+     * @param string $key
+     * @throws Exception
+     */
+    static public function removeKey(string $key): void
+    {
+        static::deleteKey($key);
     }
 }

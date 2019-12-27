@@ -127,18 +127,41 @@ class PagoFacilCard extends Cc implements Card
             $this->endpoint
         );
 
-        Register::add('user', $this->user);
-        Register::add(
-            'client',
-            new Client($this->user->getEndpoint()->getCompleteUrl())
-        );
+        try {
+            Register::add('user', $this->user);
+        } catch (Exception $exception) {
+            $this->zendLogger->alert($exception->getMessage());
+        }
+
+        try {
+            Register::add(
+                'client',
+                new Client($this->user->getEndpoint()->getCompleteUrl())
+            );
+        } catch (Exception $exception) {
+            $this->zendLogger->alert($exception->getMessage());
+        }
     }
 
+    /**
+     * @param DataObject $data
+     * @return $this|Cc
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     public function assignData(DataObject $data)
     {
         /** @var LoggerInterface $logger */
         $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
         parent::assignData($data);
+
+        try {
+            Register::removeKey('municipality');
+            Register::removeKey('suburb');
+            Register::removeKey('card_data');
+            Register::removeKey('monthly');
+        } catch (Exception $exception) {
+            $logger->alert($exception->getMessage());
+        }
 
         Register::add('municipality', $data->getData('additional_data')['billin-address-municipality']);
         Register::add('suburb', $data->getData('additional_data')['billin-address-municipality']);
@@ -163,6 +186,9 @@ class PagoFacilCard extends Cc implements Card
         /** @var Customer $customer */
         /** @var LoggerInterface $logger */
         /** @var Address $billingAddress */
+        /** @var Charge $charge */
+
+        $charge = null;
 
         if ($amount <= 0) {
             throw new AmountException('Invalid amount');
@@ -227,7 +253,13 @@ class PagoFacilCard extends Cc implements Card
             $payment->setTransactionId($exception->getCharge()->getId());
             $payment->setIsTransactionClosed(false);
             $payment->setIsTransactionPending(true);
+            $charge = $exception->getCharge();
             $logger->error($exception->getMessage());
+        } finally {
+            Register::removeInstance();
+            if (!is_null($charge)) {
+                throw $exception;
+            }
         }
 
         return $this;

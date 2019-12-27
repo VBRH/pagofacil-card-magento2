@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace PagoFacil\Payment\Source\Client;
 
 use Magento\Framework\App\ObjectManager;
-use Magento\Framework\HTTP\Client\Curl;
 use Magento\Framework\HTTP\ClientInterface as HttpClientInterface;
-use PagoFacil\Payment\Exceptions\ClientException;
-use PagoFacil\Payment\Source\Client\ClientInterface as HTTPInterface;
 use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
-use PagoFacil\Payment\Source\Register;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
