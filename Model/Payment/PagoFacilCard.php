@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Model\Payment;
 
-use ArrayAccess;
 use ArrayObject;
 use Exception;
 use Magento\Customer\Model\CustomerFactory;
@@ -40,7 +39,6 @@ use PagoFacil\Payment\Source\User\Client as UserClient;
 use PagoFacil\Payment\Source\Interfaces\Dto;
 use PagoFacil\Payment\Source\Logger as PagoFacilLogger;
 use PagoFacil\Payment\Source\Register;
-use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 
 class PagoFacilCard extends Cc implements Card
@@ -69,7 +67,7 @@ class PagoFacilCard extends Cc implements Card
      * @param AbstractResource|null $resource
      * @param AbstractDb|null $resourceCollection
      * @param array $data
-     * @throws \Exception
+     * @throws Exception
      */
     public function __construct(
         Context $context,
@@ -129,18 +127,11 @@ class PagoFacilCard extends Cc implements Card
             $this->endpoint
         );
 
-        $this->zendLogger->err('constructor');
-
-        try {
-            Register::add('user', $this->user);
-            Register::add(
-                'client',
-                new Client($this->user->getEndpoint()->getCompleteUrl())
-            );
-        } catch (Exception $exception) {
-            $this->zendLogger->err($exception->getMessage());
-            $this->zendLogger->err(json_encode(Register::getAll()));
-        }
+        Register::add('user', $this->user);
+        Register::add(
+            'client',
+            new Client($this->user->getEndpoint()->getCompleteUrl())
+        );
     }
 
     public function assignData(DataObject $data)
@@ -166,10 +157,6 @@ class PagoFacilCard extends Cc implements Card
      */
     public function capture(InfoInterface $payment, $amount): self
     {
-        if ($amount <= 0) {
-            throw new AmountException('Invalid amount');
-        }
-
         /** @var Payment $payment */
         /** @var Order $order */
         /** @var UserClient $user */
@@ -177,9 +164,12 @@ class PagoFacilCard extends Cc implements Card
         /** @var LoggerInterface $logger */
         /** @var Address $billingAddress */
 
+        if ($amount <= 0) {
+            throw new AmountException('Invalid amount');
+        }
+
         $order = $payment->getOrder();
         $order->setStatus(Order::STATE_PENDING_PAYMENT);
-
         $paymentData = new ArrayObject(Register::bringOut('card_data'));
         $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
         $customer = ObjectManager::getInstance()->get(CustomerFactory::class)->create()->load($order->getCustomerId());
@@ -225,6 +215,7 @@ class PagoFacilCard extends Cc implements Card
             if (is_null($payment->getParentTransactionId())) {
                 $this->authorize($payment, $amount);
             }
+
             $order->setStatus(Order::STATE_PROCESSING);
             $payment->setIsTransactionClosed(true);
 
@@ -232,13 +223,11 @@ class PagoFacilCard extends Cc implements Card
             $payment->setIsTransactionClosed(false);
             $payment->setIsTransactionPending(true);
             $logger->error($exception->getMessage());
-            $logger->error($exception->getTraceAsString());
         } catch (PaymentException $exception) {
             $payment->setTransactionId($exception->getCharge()->getId());
             $payment->setIsTransactionClosed(false);
             $payment->setIsTransactionPending(true);
             $logger->error($exception->getMessage());
-            $logger->error($exception->getTraceAsString());
         }
 
         return $this;
@@ -257,7 +246,6 @@ class PagoFacilCard extends Cc implements Card
         }
         $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
         $httpClient = Register::bringOut('client');
-
         $request = new PrimitiveRequest(
             ClientInterface::METHOD_TRANSACTION,
             Register::bringOut('transaccion')
