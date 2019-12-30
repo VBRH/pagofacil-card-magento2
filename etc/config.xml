@@ -9,6 +9,13 @@
                 <cctypes>AE,VI,MC</cctypes>
                 <payment_action>authorize_capture</payment_action>
             </pagofacil_card>
+            <pagofacil_cash>
+                <title>pagofacil cash</title>
+                <model>PagoFacil\Payment\Model\Payment\Cash</model>
+                <active>1</active>
+                <cctypes>AE,VI,MC</cctypes>
+                <payment_action>authorize_capture</payment_action>
+            </pagofacil_cash>
         </payment>
     </default>
 </config>
