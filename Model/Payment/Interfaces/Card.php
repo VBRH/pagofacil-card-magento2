@@ -7,7 +7,7 @@ namespace PagoFacil\Payment\Model\Payment\Interfaces;
 use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
 use PagoFacil\Payment\Source\Interfaces\Dto;
 
-interface Card
+interface Card extends ConfigInterface
 {
     const CODE = 'pagofacil_card';
 
