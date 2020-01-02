@@ -10,6 +10,10 @@ define(
             {
                 type: 'pagofacil_card',
                 component: 'Pagofacil_Card/js/view/payment/method-renderer/cc-form'
+            },
+            {
+                type: 'pagofacil_cash',
+                component: 'Pagofacil_Card/js/view/payment/method-renderer/cash-form'
             }
         );
 

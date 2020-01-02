@@ -28,6 +28,11 @@
                                                                                 true
                                                                             </item>
                                                                         </item>
+                                                                        <item name="pagofacil_cash" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">
+                                                                                true
+                                                                            </item>
+                                                                        </item>
                                                                     </item>
                                                                 </item>
                                                             </item>
