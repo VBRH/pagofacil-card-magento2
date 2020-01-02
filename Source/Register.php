@@ -118,6 +118,6 @@ final class Register
      */
     static public function removeKey(string $key): void
     {
-        static::deleteKey($key);
+        static::getInstance()->deleteKey($key);
     }
 }
