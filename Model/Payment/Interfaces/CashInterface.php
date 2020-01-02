@@ -2,7 +2,7 @@
 
 namespace PagoFacil\Payment\Model\Payment\Interfaces;
 
-interface CashInterface
+interface CashInterface extends ConfigInterface
 {
     const CODE = 'pagofacil_cash';
 }

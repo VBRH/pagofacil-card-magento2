@@ -21,6 +21,7 @@ use Magento\Payment\Model\InfoInterface;
 use Magento\Payment\Model\Method\AbstractMethod;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment;
+use PagoFacil\Payment\Model\Payment\Interfaces\ConfigInterface;
 use PagoFacil\Payment\Source\Transaction\Charge;
 use Psr\Log\LoggerInterface;
 use Magento\Payment\Model\Method\Logger;
@@ -32,6 +33,7 @@ use PagoFacil\Payment\Source\User\Client as UserClient;
 
 class Cash extends AbstractMethod implements CashInterface
 {
+    use ConfigData;
     /** @var EndPoint $endpoint */
     private $endpoint;
     /** @var UserClient $user */
@@ -90,13 +92,9 @@ class Cash extends AbstractMethod implements CashInterface
         $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
 
         if ($this->getConfigData('is_sandbox')) {
-            $url = $this->getConfigData('endpoint_sandbox');
+            $url = $this->getConfigDataPagofacil('endpoint_sandbox', ConfigInterface::CODECONF);
         } else {
-            $url = $this->getConfigData('endpoint_production');
-        }
-
-        if ((integer)$this->getConfigData('monthy_installment_enabled')) {
-            $this->monthlyInstallments = $this->getConfigData('monthly_installments');
+            $url = $this->getConfigDataPagofacil('endpoint_production', ConfigInterface::CODECONF);
         }
 
         $this->endpoint = new EndPoint(
@@ -105,16 +103,16 @@ class Cash extends AbstractMethod implements CashInterface
         );
 
         $this->user = new UserClient(
-            $this->getConfigData('display_user_id'),
-            $this->getConfigData('display_user_branch_office_id'),
-            $this->getConfigData('display_user_phase_id'),
+            $this->getConfigDataPagofacil('display_user_id', ConfigInterface::CODECONF),
+            $this->getConfigDataPagofacil('display_user_branch_office_id', ConfigInterface::CODECONF),
+            $this->getConfigDataPagofacil('display_user_phase_id', ConfigInterface::CODECONF),
             $this->endpoint
         );
 
         try {
             Register::add('user', $this->user);
         } catch (Exception $exception) {
-            $logger->warning($exception->getMessage());
+            $logger->alert($exception->getMessage());
         }
 
         try {
@@ -123,7 +121,7 @@ class Cash extends AbstractMethod implements CashInterface
                 new Client($this->user->getEndpoint()->getCompleteUrl())
             );
         } catch (Exception $exception) {
-            $logger->warning($exception->getMessage());
+            $logger->alert($exception->getMessage());
         }
     }
 
