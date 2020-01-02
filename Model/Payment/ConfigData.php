@@ -13,7 +13,7 @@ trait ConfigData
      */
     public function getConfigDataPagofacil(string $field, string $code)
     {
-        $path = "payment/{$this->getCode()}/$field";
+        $path = "payment/{$code}/$field";
         return $this->_scopeConfig->getValue($path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, null);
     }
 }
