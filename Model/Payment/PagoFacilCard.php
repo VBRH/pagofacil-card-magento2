@@ -29,6 +29,7 @@ use PagoFacil\Payment\Exceptions\AmountException;
 use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Model\Payment\Interfaces\Card;
+use PagoFacil\Payment\Model\Payment\Interfaces\ConfigInterface;
 use PagoFacil\Payment\Source\Client\ClientInterface;
 use PagoFacil\Payment\Source\Client\EndPoint;
 use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
@@ -44,6 +45,7 @@ use Psr\Log\LoggerInterface;
 class PagoFacilCard extends Cc implements Card
 {
     use PagoFacilLogger;
+    use ConfigData;
 
     /** @var EndPoint $endpoint */
     private $endpoint;
@@ -106,9 +108,9 @@ class PagoFacilCard extends Cc implements Card
         );
 
         if ($this->getConfigData('is_sandbox')) {
-            $url = $this->getConfigData('endpoint_sandbox');
+            $url = $this->getConfigDataPagofacil('endpoint_sandbox', ConfigInterface::CODECONF);
         } else {
-            $url = $this->getConfigData('endpoint_production');
+            $url = $this->getConfigDataPagofacil('endpoint_production', ConfigInterface::CODECONF);
         }
 
         if ((integer)$this->getConfigData('monthy_installment_enabled')) {
@@ -121,9 +123,9 @@ class PagoFacilCard extends Cc implements Card
         );
 
         $this->user = new UserClient(
-            $this->getConfigData('display_user_id'),
-            $this->getConfigData('display_user_branch_office_id'),
-            $this->getConfigData('display_user_phase_id'),
+            $this->getConfigDataPagofacil('display_user_id', ConfigInterface::CODECONF),
+            $this->getConfigDataPagofacil('display_user_branch_office_id', ConfigInterface::CODECONF),
+            $this->getConfigDataPagofacil('display_user_phase_id', ConfigInterface::CODECONF),
             $this->endpoint
         );
 
