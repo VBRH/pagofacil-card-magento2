@@ -7,7 +7,7 @@ PagoFacil.net
 
 ```sh
 composer config repositories.pagofacil git https://github.com/angelbarrientos/pagofacil-card-magento2.git
-composer requiere pagofacilnet/card-magento2 dev-develop
+composer require pagofacilnet/card-magento2 dev-develop
 
 bin/magento module:enable Pagofacil_Card
 bin/magento setup:upgrade
