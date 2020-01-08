@@ -17,7 +17,7 @@
     "autoload": {
         "files": [ "registration.php" ],
         "psr-4": {
-            "Pagofacil\\Payment\\": ""
+            "PagoFacil\\Payment\\": ""
         }
     },
     "autoload-dev":{
