@@ -7,9 +7,10 @@ namespace PagoFacil\Payment\Block\Info;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Payment\Block\Info;
+use PAgoFacil\Payment\Block\Info\Interfaces\OrderInfoInterface;
 use Psr\Log\LoggerInterface;
 
-class Custom extends Info
+class Custom extends Info implements OrderInfoInterface
 {
     /**
      * Custom constructor.

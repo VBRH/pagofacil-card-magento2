@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="1column"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd" >
+    <body>
+        <referenceBlock name="page.main.title">
+            <block class="" template="" name="" />
+            <action method="">
+                <argument translate="true" name="" xsi:type="string"></argument>
+            </action>
+        </referenceBlock>
+        <referenceContainer name="content">
+            <block class="Magento\Checkout\Block\Onepage\Success" name="checkout.success" template="Pagofacil::success.phtml" cacheable="false" />
+            <block class="Magento\Checkout\Block\Registration" name="checkout.registration" template="registration.phtml" cacheable="false" />
+        </referenceContainer>
+        <containter name="order.success.additional.info" label="Order Success Additional Info"/>
+    </body>
+</page>
