@@ -30,7 +30,7 @@ use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Model\Payment\Interfaces\Card;
 use PagoFacil\Payment\Model\Payment\Interfaces\ConfigInterface;
-use PagoFacil\Payment\Source\Client\ClientInterface;
+use PagoFacil\Payment\Source\Client\Interfaces\ClientInterface;
 use PagoFacil\Payment\Source\Client\EndPoint;
 use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
 use PagoFacil\Payment\Source\Client\PagoFacil as Client;
@@ -209,6 +209,8 @@ class PagoFacilCard extends Cc implements Card
             $plan = 'MSI';
         }
 
+        $this->monthlyInstallmentsValidation(intval($paymentData->offsetGet('monthly-installments')));
+
         Register::add('transaccion', [
             'method' => ClientInterface::METHOD_TRANSACTION,
             'data' => [
@@ -321,5 +323,16 @@ class PagoFacilCard extends Cc implements Card
         asort($months);
 
         return $months;
+    }
+
+    /**
+     * @param int $month
+     * @throws AmountException
+     */
+    public function monthlyInstallmentsValidation(int $month): void
+    {
+        if (!in_array($month, $this->getMonthlyInstallments())) {
+            throw new AmountException('Meses sin intereses invalidos');
+        }
     }
 }

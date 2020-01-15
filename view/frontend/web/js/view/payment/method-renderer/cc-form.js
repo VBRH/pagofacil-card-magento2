@@ -10,6 +10,10 @@ define([
         let monthly_payment = 0;
         let months = parseInt($(this).val());
 
+        if (isNaN(total)) {
+            months = 1;
+        }
+
         switch (true) {
             case months > 1:
                 monthly_payment = (total/months).toFixed(2);
