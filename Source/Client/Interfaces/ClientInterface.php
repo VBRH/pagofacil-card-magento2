@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PagoFacil\Payment\Source\Client;
+namespace PagoFacil\Payment\Source\Client\Interfaces;
 
 interface ClientInterface
 {

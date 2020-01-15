@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Test\Unit\Source\Http;
 
-use PagoFacil\Payment\Source\Client\ClientInterface;
+use PagoFacil\Payment\Source\Client\Interfaces\ClientInterface;
 use PagoFacil\Payment\Source\Client\PagoFacil;
 use PagoFacil\Payment\Source\Client\PrimitiveRequest;
 use PagoFacil\Payment\Source\Client\Response;
