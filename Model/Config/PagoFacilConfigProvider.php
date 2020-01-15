@@ -65,6 +65,7 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
         return [
             'payment' => [
                 'months_installments' => $this->payment->getMonthlyInstallments(),
+                'total' => $this->cart->getQuote()->getGrandTotal(),
                 'ccform' => [
                     'months' => [
                         Card::CODE => $this->getMonths()
