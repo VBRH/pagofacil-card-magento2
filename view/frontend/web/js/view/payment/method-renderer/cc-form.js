@@ -1,12 +1,13 @@
 define([
     'Magento_Payment/js/view/payment/cc-form',
     'jquery',
+    'Magento_Payment/js/model/credit-card-validation/validator'
 ], function (Component, $) {
     'use strict';
 
-    let total = window.checkoutConfig.payment.total;
 
     $(document).on('change', '#pagofacil_monthly_installments', function () {
+        let total = window.checkoutConfig.payment.total;
         let monthly_payment = 0;
         let months = parseInt($(this).val());
 
@@ -93,6 +94,11 @@ define([
             }
 
             return expiration;
+        },
+        validate: function () {
+            let form = $('#' + this.getCode() + '-form');
+            return form.validation() && form.validation('isValid');
         }
     })
 });
+
