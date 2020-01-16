@@ -4,9 +4,9 @@ define([
 ], function (Component, $) {
     'use strict';
 
-    let total = window.checkoutConfig.payment.total;
 
     $(document).on('change', '#pagofacil_monthly_installments', function () {
+        let total = window.checkoutConfig.payment.total;
         let monthly_payment = 0;
         let months = parseInt($(this).val());
 
@@ -96,3 +96,4 @@ define([
         }
     })
 });
+
