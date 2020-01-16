@@ -207,9 +207,8 @@ class PagoFacilCard extends Cc implements Card
 
         if(1 < intval($paymentData->offsetGet('monthly-installments'))) {
             $plan = 'MSI';
+            $this->monthlyInstallmentsValidation(intval($paymentData->offsetGet('monthly-installments')));
         }
-
-        $this->monthlyInstallmentsValidation(intval($paymentData->offsetGet('monthly-installments')));
 
         Register::add('transaccion', [
             'method' => ClientInterface::METHOD_TRANSACTION,
