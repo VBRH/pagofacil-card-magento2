@@ -28,26 +28,32 @@
 
         <!-- Render the native credit card form. -->
         <form class="form" data-bind="attr: {'id': getCode() + '-form'}">
-            <fieldset class="fieldset">
-                <div class="field required pagofacil">
+            <fieldset class="fieldset pagofacil">
+                <div class="field string required">
                     <label class="label" >
                             <span>
                                 <span>Municipio:</span>
                             </span>
                     </label>
                     <div class="control">
-                        <input id="pf-municipality" class="input-text" type="text" name="currentBillingAddress[municipality]">
+                        <input id="pf-municipality" class="input-text" type="text" name="currentBillingAddress[municipality]" data-validate="{'required': true}">
+                        <div for="pagofacil_card_cc_text" generated="true" class="mage-error" id="pagofacil_card_cc_municipality-error">
+                        </div>
                     </div>
+                </div>
+                <div class="field string required">
                     <label class="label" >
                             <span>
                                 <span>Colonia: </span>
                             </span>
                     </label>
                     <div class="control">
-                        <input id="pf-suburb" class="input-text" type="text" name="currentBillingAddress[suburb]">
+                        <input id="pf-suburb" class="input-text" type="text" name="currentBillingAddress[suburb]" data-validate="{'required': true}">
+                        <div for="pagofacil_card_cc_text" generated="true" class="mage-error" id="pagofacil_card_cc_suburb-error">
+                        </div>
                     </div>
                 </div>
-                <div class="field type pagofacil">
+                <div class="field type">
                     <label class="label">meses sin intereses</label>
                     <div class="control">
                         <select id="pagofacil_monthly_installments" name="monthly_installments" class="select"

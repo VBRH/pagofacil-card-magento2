@@ -165,6 +165,14 @@ class PagoFacilCard extends Cc implements Card
             $logger->alert($exception->getMessage());
         }
 
+        if (empty($data->getData('additional_data')['billin-address-municipality'])) {
+            throw new PaymentException('El campo de municipio es obligatorio.');
+        }
+
+        if (empty($data->getData('additional_data')['billin-address-municipality'])) {
+            throw new PaymentException('El campo de colonia es obligatorio.');
+        }
+
         Register::add('municipality', $data->getData('additional_data')['billin-address-municipality']);
         Register::add('suburb', $data->getData('additional_data')['billin-address-municipality']);
         Register::add('card_data', $data->getData('additional_data'));

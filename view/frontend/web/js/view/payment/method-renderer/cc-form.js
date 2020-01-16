@@ -93,6 +93,10 @@ define([
             }
 
             return expiration;
+        },
+        validate: function () {
+            let form = $('#' + this.getCode() + '-form');
+            return form.validation() && form.validation('isValid');
         }
     })
 });
