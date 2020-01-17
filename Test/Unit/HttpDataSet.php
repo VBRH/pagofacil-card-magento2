@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Test\Unit;
 
-use PagoFacil\Payment\Source\Client\ClientInterface;
+use PagoFacil\Payment\Source\Client\Interfaces\ClientInterface;
 use Exception;
 
 trait HttpDataSet
