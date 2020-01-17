@@ -1,6 +1,6 @@
 {
     "name": "pagofacilnet/module-payment",
-    "description": "Demonstrates integration with payment gateway",
+    "description": "Payment gateway plugin by PagoFacil.net for Magento 2",
     "require": {
         "php": "~7.3",
         "ext-curl": "*",
