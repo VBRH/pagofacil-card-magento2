@@ -53,8 +53,8 @@ PagoFacil.net team
 [Open Source License](LICENSE.txt)
 
 
-## Change log
-
+## [Change log](CHANGELOG.md)
+## [Code metrics](METRICS.md)
 
 [documentation]:<https://pagofacil.net/desarrolladores>
 [Blog]:<https://blog.pagofacil.net/>
