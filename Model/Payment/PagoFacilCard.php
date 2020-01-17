@@ -30,7 +30,7 @@ use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Model\Payment\Interfaces\Card;
 use PagoFacil\Payment\Model\Payment\Interfaces\ConfigInterface;
-use PagoFacil\Payment\Source\Client\ClientInterface;
+use PagoFacil\Payment\Source\Client\Interfaces\ClientInterface;
 use PagoFacil\Payment\Source\Client\EndPoint;
 use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
 use PagoFacil\Payment\Source\Client\PagoFacil as Client;
@@ -165,6 +165,14 @@ class PagoFacilCard extends Cc implements Card
             $logger->alert($exception->getMessage());
         }
 
+        if (empty($data->getData('additional_data')['billin-address-municipality'])) {
+            throw new PaymentException('El campo de municipio es obligatorio.');
+        }
+
+        if (empty($data->getData('additional_data')['billin-address-municipality'])) {
+            throw new PaymentException('El campo de colonia es obligatorio.');
+        }
+
         Register::add('municipality', $data->getData('additional_data')['billin-address-municipality']);
         Register::add('suburb', $data->getData('additional_data')['billin-address-municipality']);
         Register::add('card_data', $data->getData('additional_data'));
@@ -207,6 +215,7 @@ class PagoFacilCard extends Cc implements Card
 
         if(1 < intval($paymentData->offsetGet('monthly-installments'))) {
             $plan = 'MSI';
+            $this->monthlyInstallmentsValidation(intval($paymentData->offsetGet('monthly-installments')));
         }
 
         Register::add('transaccion', [
@@ -321,5 +330,16 @@ class PagoFacilCard extends Cc implements Card
         asort($months);
 
         return $months;
+    }
+
+    /**
+     * @param int $month
+     * @throws AmountException
+     */
+    public function monthlyInstallmentsValidation(int $month): void
+    {
+        if (!in_array($month, $this->getMonthlyInstallments())) {
+            throw new AmountException('Meses sin intereses invalidos');
+        }
     }
 }

@@ -1,3 +1,11 @@
+<style>
+    .pagofacil input[type="text"] {
+        width: 225px;
+    }
+    .pagofacil select {
+        width: 225px;
+    }
+</style>
 <div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}">
     <div class="payment-method-title field choice">
         <input type="radio"
@@ -20,32 +28,46 @@
 
         <!-- Render the native credit card form. -->
         <form class="form" data-bind="attr: {'id': getCode() + '-form'}">
-            <div class="label type">
-                <label class="label" >Municipio: </label>
-                <input id="pf-municipality" class="input-text" type="text" name="currentBillingAddress[municipality]">
-            </div>
-            <div class="label type">
-                <label class="label" >Colonia: </label>
-                <input id="pf-suburb" class="input-text" type="text" name="currentBillingAddress[suburb]">
-            </div>
-            <!-- ko template: 'Magento_Payment/payment/cc-form' --><!-- /ko -->
-            <div class="field type">
-                <label class="label">meses sin intereses</label>
-                <div class="control">
-                    <select id="pagofacil_monthly_installments" name="monthly_installments" class="select"
-                            data-bind="options: getMonthlyInstallments(), optionsText: function(month) {
+            <fieldset class="fieldset pagofacil">
+                <div class="field string required">
+                    <label class="label" >
+                            <span>
+                                <span>Municipio:</span>
+                            </span>
+                    </label>
+                    <div class="control">
+                        <input id="pf-municipality" class="input-text" type="text" name="currentBillingAddress[municipality]" data-validate="{'required': true}">
+                    </div>
+                </div>
+                <div class="field string required">
+                    <label class="label" >
+                            <span>
+                                <span>Colonia: </span>
+                            </span>
+                    </label>
+                    <div class="control">
+                        <input id="pf-suburb" class="input-text" type="text" name="currentBillingAddress[suburb]" data-validate="{'required': true}">
+                    </div>
+                </div>
+                <div class="field type">
+                    <label class="label">meses sin intereses</label>
+                    <div class="control">
+                        <select id="pagofacil_monthly_installments" name="monthly_installments" class="select"
+                                data-bind="options: getMonthlyInstallments(), optionsText: function(month) {
                                 if (1 == month) {
                                     return 'En un solo pago';
                                 } else {
                                     return month + ' meses';
                                 }
                             }"></select>
+                    </div>
+                    <div id="total-monthly" class="field-cost type" style="display: none">
+                        <label>Pago mensual: </label>
+                        <p>$<span id="monthly-payment"></span></p>
+                    </div>
                 </div>
-                <div id="total-monthly" class="field-cost type" style="display: none">
-                    <label>Pago mensual: </label>
-                    <p>$<span id="monthly-payment"></span></p>
-                </div>
-            </div>
+            </fieldset>
+            <!-- ko template: 'Magento_Payment/payment/cc-form' --><!-- /ko -->
         </form>
 
         <div class="checkout-agreements-block">
