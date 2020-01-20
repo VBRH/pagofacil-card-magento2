@@ -27,3 +27,4 @@
 "Monthly installment", "Meses sin intereses"
 "Monthly payment", "Pago mensual"
 "The string are not empty", "La cadena no debe estar vacia."
+"status code out of the range", "El código de estado esta fuera del rango"
