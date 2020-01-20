@@ -49,6 +49,8 @@ PagoFacil.net team
 
 [How to contribute](CONTRIBUTING.md)
 
+[Code of conduct](CODE_OF_CONDUCT.md)
+
 [Change log](CHANGELOG.md)
 
 [Code metrics](METRICS.md)
