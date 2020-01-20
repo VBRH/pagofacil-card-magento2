@@ -49,12 +49,14 @@ PagoFacil.net team
 
 [How to contribute](CONTRIBUTING.md)
 
+[Change log](CHANGELOG.md)
+
+[Code metrics](METRICS.md)
+
 ## License
 [Open Source License](LICENSE.txt)
 
 
-## [Change log](CHANGELOG.md)
-## [Code metrics](METRICS.md)
 
 [documentation]:<https://pagofacil.net/desarrolladores>
 [Blog]:<https://blog.pagofacil.net/>
