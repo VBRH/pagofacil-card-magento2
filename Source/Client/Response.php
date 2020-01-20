@@ -9,13 +9,11 @@ use Magento\Framework\App\ObjectManager;
 use PagoFacil\Payment\Exceptions\HttpException;
 use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Source\Client\Interfaces\ClientInterface as HTTPInterface;
-use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
 use PagoFacil\Payment\Source\Interfaces\Dto;
 use PagoFacil\Payment\Source\Transaction\Charge;
-use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 
-class Response implements PagoFacilResponseInterface
+class Response extends AbstractResponse
 {
     /** @var int $statusCode */
     private $statusCode;
@@ -78,7 +76,7 @@ class Response implements PagoFacilResponseInterface
     protected function validateStatusCodeRange(int $code): void
     {
         if (100 > $code || 600 <= $code) {
-            throw new \InvalidArgumentException('status code out of the range');
+            throw new \InvalidArgumentException(__('status code out of the range'));
         }
     }
 
@@ -121,100 +119,5 @@ class Response implements PagoFacilResponseInterface
             $this->getBodyToArray()['transaccion']['data']['idPedido'],
             $this->getBodyToArray()['transaccion']['pf_message']
         );
-    }
-    /**
-     * @inheritDoc
-     */
-    public function getProtocolVersion()
-    {
-        // TODO: Implement getProtocolVersion() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function withProtocolVersion($version)
-    {
-        // TODO: Implement withProtocolVersion() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getHeaders()
-    {
-        // TODO: Implement getHeaders() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function hasHeader($name)
-    {
-        // TODO: Implement hasHeader() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getHeader($name)
-    {
-        // TODO: Implement getHeader() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getHeaderLine($name)
-    {
-        // TODO: Implement getHeaderLine() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function withHeader($name, $value)
-    {
-        // TODO: Implement withHeader() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function withAddedHeader($name, $value)
-    {
-        // TODO: Implement withAddedHeader() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function withoutHeader($name)
-    {
-        // TODO: Implement withoutHeader() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function withBody(StreamInterface $body)
-    {
-        // TODO: Implement withBody() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function withStatus($code, $reasonPhrase = '')
-    {
-        // TODO: Implement withStatus() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getReasonPhrase()
-    {
-        // TODO: Implement getReasonPhrase() method.
     }
 }

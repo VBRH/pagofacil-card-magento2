@@ -66,6 +66,12 @@ class PagoFacilConfigProvider implements ConfigProviderInterface
             'payment' => [
                 'months_installments' => $this->payment->getMonthlyInstallments(),
                 'total' => $this->cart->getQuote()->getGrandTotal(),
+                'i18n' => [
+                    "Municipality" => "Municipio",
+                    "Suburb" => "Colonia",
+                    "Monthly installment" => "Meses sin intereses",
+                    "Monthly payment" => "Pago mensual",
+                ],
                 'ccform' => [
                     'months' => [
                         Card::CODE => $this->getMonths()

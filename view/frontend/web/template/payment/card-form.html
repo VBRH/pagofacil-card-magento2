@@ -32,7 +32,7 @@
                 <div class="field string required">
                     <label class="label" >
                             <span>
-                                <span>Municipio:</span>
+                                <!-- ko i18n: 'Municipality' --><!-- /ko -->
                             </span>
                     </label>
                     <div class="control">
@@ -42,7 +42,7 @@
                 <div class="field string required">
                     <label class="label" >
                             <span>
-                                <span>Colonia: </span>
+                                <!-- ko i18n: 'Suburb' --><!-- /ko -->
                             </span>
                     </label>
                     <div class="control">
@@ -50,7 +50,7 @@
                     </div>
                 </div>
                 <div class="field type">
-                    <label class="label">meses sin intereses</label>
+                    <!-- ko i18n: 'Mounthly installments' --><!-- /ko -->
                     <div class="control">
                         <select id="pagofacil_monthly_installments" name="monthly_installments" class="select"
                                 data-bind="options: getMonthlyInstallments(), optionsText: function(month) {
@@ -62,7 +62,8 @@
                             }"></select>
                     </div>
                     <div id="total-monthly" class="field-cost type" style="display: none">
-                        <label>Pago mensual: </label>
+                        <!-- ko i18n: 'Monthly installment' --><!-- /ko -->
+                        <label></label>
                         <p>$<span id="monthly-payment"></span></p>
                     </div>
                 </div>

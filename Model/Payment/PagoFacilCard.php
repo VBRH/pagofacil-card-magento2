@@ -166,11 +166,11 @@ class PagoFacilCard extends Cc implements Card
         }
 
         if (empty($data->getData('additional_data')['billin-address-municipality'])) {
-            throw new PaymentException('El campo de municipio es obligatorio.');
+            throw new PaymentException('The field municipality is required.');
         }
 
         if (empty($data->getData('additional_data')['billin-address-municipality'])) {
-            throw new PaymentException('El campo de colonia es obligatorio.');
+            throw new PaymentException('The field suburb is required.');
         }
 
         Register::add('municipality', $data->getData('additional_data')['billin-address-municipality']);
@@ -339,7 +339,7 @@ class PagoFacilCard extends Cc implements Card
     public function monthlyInstallmentsValidation(int $month): void
     {
         if (!in_array($month, $this->getMonthlyInstallments())) {
-            throw new AmountException('Meses sin intereses invalidos');
+            throw new AmountException('Invalid monthly installment');
         }
     }
 }
