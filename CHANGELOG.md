@@ -23,6 +23,10 @@ All notable changes to this project will be documented in this file.
 - A trait for create a custom zend logger.
 - The Registry pattern.
 ### Changed
+- Refactoring
+
+> The responsibilities of both the card payment model and the implementations on psr 7 and 18 have been segregated. 
+> This has reduced the percentage of complexity, cyclometric complexity and maintenance of the project.
 ### Fixed
 ### Deprecated
 ### Removed
