@@ -11,7 +11,6 @@ use Magento\Framework\Api\AttributeValueFactory;
 use Magento\Framework\Api\ExtensionAttributesFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Data\Collection\AbstractDb;
-use Magento\Framework\DataObject;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Module\ModuleListInterface;
@@ -19,7 +18,6 @@ use Magento\Framework\Registry;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Payment\Helper\Data;
 use Magento\Payment\Model\InfoInterface;
-use Magento\Payment\Model\Method\Cc;
 use Magento\Payment\Model\Method\Logger;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment;
@@ -28,21 +26,21 @@ use Magento\Customer\Model\{Customer, Address};
 use PagoFacil\Payment\Exceptions\AmountException;
 use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\PaymentException;
+use PagoFacil\Payment\Model\Payment\Abstracts\AbstractCard;
 use PagoFacil\Payment\Model\Payment\Interfaces\Card;
 use PagoFacil\Payment\Model\Payment\Interfaces\ConfigInterface;
 use PagoFacil\Payment\Source\Client\Interfaces\ClientInterface;
 use PagoFacil\Payment\Source\Client\EndPoint;
-use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
 use PagoFacil\Payment\Source\Client\PagoFacil as Client;
 use PagoFacil\Payment\Source\Client\PrimitiveRequest;
 use PagoFacil\Payment\Source\Transaction\Charge;
 use PagoFacil\Payment\Source\User\Client as UserClient;
-use PagoFacil\Payment\Source\Interfaces\Dto;
 use PagoFacil\Payment\Source\Logger as PagoFacilLogger;
 use PagoFacil\Payment\Source\Register;
+use PagoFacil\Payment\Source\PagoFacilCardDataDto;
 use Psr\Log\LoggerInterface;
 
-class PagoFacilCard extends Cc implements Card
+final class PagoFacilCard extends AbstractCard implements Card
 {
     use PagoFacilLogger;
     use ConfigData;
@@ -53,7 +51,6 @@ class PagoFacilCard extends Cc implements Card
     private $user;
     /** @var Client $client  */
     private $client;
-    private $monthlyInstallments;
 
     /**
      * PagoFacilCard constructor.
@@ -145,41 +142,6 @@ class PagoFacilCard extends Cc implements Card
         }
     }
 
-    /**
-     * @param DataObject $data
-     * @return $this|Cc
-     * @throws \Magento\Framework\Exception\LocalizedException
-     */
-    public function assignData(DataObject $data)
-    {
-        /** @var LoggerInterface $logger */
-        $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
-        parent::assignData($data);
-
-        try {
-            Register::removeKey('municipality');
-            Register::removeKey('suburb');
-            Register::removeKey('card_data');
-            Register::removeKey('monthly');
-        } catch (Exception $exception) {
-            $logger->alert($exception->getMessage());
-        }
-
-        if (empty($data->getData('additional_data')['billin-address-municipality'])) {
-            throw new PaymentException('The field municipality is required.');
-        }
-
-        if (empty($data->getData('additional_data')['billin-address-municipality'])) {
-            throw new PaymentException('The field suburb is required.');
-        }
-
-        Register::add('municipality', $data->getData('additional_data')['billin-address-municipality']);
-        Register::add('suburb', $data->getData('additional_data')['billin-address-municipality']);
-        Register::add('card_data', $data->getData('additional_data'));
-        Register::add('monthly', $data->getData('additional_data')['monthly-installments']);
-
-        return $this;
-    }
 
     /**
      * @param InfoInterface $payment
@@ -214,39 +176,14 @@ class PagoFacilCard extends Cc implements Card
         $plan = 'NOR';
 
         if(1 < intval($paymentData->offsetGet('monthly-installments'))) {
-            $plan = 'MSI';
             $this->monthlyInstallmentsValidation(intval($paymentData->offsetGet('monthly-installments')));
+            $plan = 'MSI';
+            $paymentData->offsetSet('plan', $plan);
         }
 
-        Register::add('transaccion', [
-            'method' => ClientInterface::METHOD_TRANSACTION,
-            'data' => [
-                'idUsuario' => $user->getIdUser(),
-                'idSucursal' => $user->getIdBranchOffice(),
-                'idPedido' => $order->getRealOrderId(),
-                'idServicio' => 3,
-                'monto' => $order->getGrandTotal(),
-                'plan' => $plan,
-                'mensualidad' => $paymentData->offsetGet('monthly-installments'),
-                'numeroTarjeta' => $paymentData->offsetGet('cc_number'),
-                'cvt' => $paymentData->offsetGet('cc_cid'),
-                'mesExpiracion' => $paymentData->offsetGet('cc_exp_month'),
-                'anyoExpiracion' => substr(
-                    $paymentData->offsetGet('cc_exp_year'), 2, 2
-                ),
-                'nombre' => $order->getCustomerName(),
-                'apellidos' => $order->getCustomerLastname(),
-                'cp' => $billingAddress->getPostcode(),
-                'email' => $order->getCustomerEmail(),
-                'telefono' => $billingAddress->getTelephone(),
-                'celular' => $billingAddress->getTelephone(),
-                'calleyNumero' => $billingAddress->getStreet()[0],
-                'colonia' => Register::bringOut('suburb'),
-                'municipio' => Register::bringOut('municipality'),
-                'pais' => 'México',
-                'estado' => $billingAddress->getRegion()
-            ]
-        ]);
+        $cardDataDto = new PagoFacilCardDataDto($user, $order, $paymentData, $billingAddress, );
+        $this->createTransactionInformation($cardDataDto);
+
 
         try {
             if (is_null($payment->getParentTransactionId())) {
@@ -305,41 +242,5 @@ class PagoFacilCard extends Cc implements Card
         $payment->setIsTransactionClosed(false);
 
         return $this;
-    }
-
-    /**
-     * @param PagoFacilResponseInterface $response
-     * @return Dto
-     */
-    public function getTransaction(PagoFacilResponseInterface $response): Dto
-    {
-        return $response->getTransaction();
-    }
-
-    /**
-     * @return array
-     */
-    public function getMonthlyInstallments(): array
-    {
-        /** @var array $months */
-        $months = explode(',', $this->monthlyInstallments);
-
-        if (!in_array("1", $months)) {
-            array_push($months, "1");
-        }
-        asort($months);
-
-        return $months;
-    }
-
-    /**
-     * @param int $month
-     * @throws AmountException
-     */
-    public function monthlyInstallmentsValidation(int $month): void
-    {
-        if (!in_array($month, $this->getMonthlyInstallments())) {
-            throw new AmountException('Invalid monthly installment');
-        }
     }
 }
