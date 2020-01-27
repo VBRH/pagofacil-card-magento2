@@ -8,7 +8,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
-class AbstractRequest implements RequestInterface
+abstract class AbstractRequest implements RequestInterface
 {
 
     /**

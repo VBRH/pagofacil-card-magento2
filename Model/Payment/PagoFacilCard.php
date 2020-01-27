@@ -40,7 +40,7 @@ use PagoFacil\Payment\Source\Register;
 use PagoFacil\Payment\Source\PagoFacilCardDataDto;
 use Psr\Log\LoggerInterface;
 
-final class PagoFacilCard extends AbstractCard implements Card
+class PagoFacilCard extends AbstractCard implements Card
 {
     use PagoFacilLogger;
     use ConfigData;
