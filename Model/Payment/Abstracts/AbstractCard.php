@@ -16,7 +16,7 @@ use PagoFacil\Payment\Source\PagoFacilCardDataDto;
 use PagoFacil\Payment\Source\Register;
 use Psr\Log\LoggerInterface;
 
-class AbstractCard extends CreditCard
+abstract class AbstractCard extends CreditCard
 {
     protected $monthlyInstallments;
 

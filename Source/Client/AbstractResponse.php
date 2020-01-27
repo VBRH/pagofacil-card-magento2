@@ -8,7 +8,7 @@ use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
 use PagoFacil\Payment\Source\Transaction\Charge;
 use Psr\Http\Message\StreamInterface;
 
-class AbstractResponse implements PagoFacilResponseInterface
+abstract class AbstractResponse implements PagoFacilResponseInterface
 {
 
     /**
