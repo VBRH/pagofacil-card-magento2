@@ -27,6 +27,10 @@ All notable changes to this project will be documented in this file.
 
 > The responsibilities of both the card payment model and the implementations on psr 7 and 18 have been segregated. 
 > This has reduced the percentage of complexity, cyclometric complexity and maintenance of the project.
+- Readme file
+> The readme file are added new commands in the install section, this commands are about permitions on 
+> Magento's directory. 
+> The official documentation of magento are added like reference.
 ### Fixed
 ### Deprecated
 ### Removed
