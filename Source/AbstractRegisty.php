@@ -63,7 +63,7 @@ class AbstractRegisty implements RegistryInterface
     public function deleteKey(string $key): void
     {
         if (!$this->data->offsetExists($key)) {
-            throw new Exception("Key {$key} not exists");
+            throw new Exception("Can't delete the key {$key} because not exists");
         }
 
         $this->data->offsetUnset($key);

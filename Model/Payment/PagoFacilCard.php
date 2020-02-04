@@ -174,6 +174,7 @@ class PagoFacilCard extends AbstractCard implements Card
         $billingAddress = $customer->getDefaultBillingAddress();
         $user = Register::bringOut('user');
         $plan = 'NOR';
+        $paymentData->offsetSet('plan', $plan);
 
         if(1 < intval($paymentData->offsetGet('monthly-installments'))) {
             $this->monthlyInstallmentsValidation(intval($paymentData->offsetGet('monthly-installments')));
@@ -182,7 +183,11 @@ class PagoFacilCard extends AbstractCard implements Card
         }
 
         $cardDataDto = new PagoFacilCardDataDto($user, $order, $paymentData, $billingAddress, );
-        $this->createTransactionInformation($cardDataDto);
+        try {
+            $this->createTransactionInformation($cardDataDto);
+        } catch (Exception $exception) {
+            $logger->alert($exception->getTraceAsString());
+        }
 
 
         try {
