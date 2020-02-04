@@ -31,15 +31,6 @@ abstract class AbstractCard extends CreditCard
         $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
         parent::assignData($data);
 
-        try {
-            Register::removeKey('municipality');
-            Register::removeKey('suburb');
-            Register::removeKey('card_data');
-            Register::removeKey('monthly');
-        } catch (Exception $exception) {
-            $logger->alert($exception->getMessage());
-        }
-
         if (empty($data->getData('additional_data')['billin-address-municipality'])) {
             throw new PaymentException('The field municipality is required.');
         }
