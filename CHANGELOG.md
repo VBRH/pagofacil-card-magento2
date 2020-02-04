@@ -31,6 +31,10 @@ All notable changes to this project will be documented in this file.
 > The readme file are added new commands in the install section, this commands are about permitions on 
 > Magento's directory. 
 > The official documentation of magento are added like reference.
+- Error trying to clean register pattern implementation.
+> when trying to clean the register (that is bad implementation) the alloc of
+> memory is empty and throw a exception that intercept the magento platform
+> and show the user and stop the payment flow
 ### Fixed
 ### Deprecated
 ### Removed
