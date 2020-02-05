@@ -11,6 +11,7 @@ use Magento\Framework\Api\AttributeValueFactory;
 use Magento\Framework\Api\ExtensionAttributesFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Data\Collection\AbstractDb;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Module\ModuleListInterface;
@@ -25,6 +26,7 @@ use Magento\Framework\App\ObjectManager;
 use Magento\Customer\Model\{Customer, Address};
 use PagoFacil\Payment\Exceptions\AmountException;
 use PagoFacil\Payment\Exceptions\ClientException;
+use PagoFacil\Payment\Exceptions\HttpException;
 use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Model\Payment\Abstracts\AbstractCard;
 use PagoFacil\Payment\Model\Payment\Interfaces\Card;
@@ -148,7 +150,7 @@ class PagoFacilCard extends AbstractCard implements Card
      * @param float $amount
      * @return self
      * @throws AmountException
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function capture(InfoInterface $payment, $amount): self
     {
@@ -218,6 +220,14 @@ class PagoFacilCard extends AbstractCard implements Card
         return $this;
     }
 
+    /**
+     * @param InfoInterface $payment
+     * @param float $amount
+     * @return $this|AbstractCard
+     * @throws AmountException
+     * @throws PaymentException
+     * @throws HttpException
+     */
     public function authorize(InfoInterface $payment, $amount)
     {
         /** @var Payment $payment */
