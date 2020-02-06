@@ -178,7 +178,7 @@ class PagoFacilCard extends AbstractCard implements Card
         $paymentData = new ArrayObject(Register::bringOut('card_data'));
         $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
         $customer = ObjectManager::getInstance()->get(CustomerFactory::class)->create()->load($order->getCustomerId());
-        $billingAddress = $customer->getDefaultBillingAddress();
+        $billingAddress = $this->validateDefaultBillingAddress($customer->getDefaultBillingAddress());
         $user = Register::bringOut('user');
         $plan = 'NOR';
         $paymentData->offsetSet('plan', $plan);
@@ -190,12 +190,12 @@ class PagoFacilCard extends AbstractCard implements Card
         }
 
         $cardDataDto = new PagoFacilCardDataDto($user, $order, $paymentData, $billingAddress, );
+
         try {
             $this->createTransactionInformation($cardDataDto);
         } catch (Exception $exception) {
             $logger->alert($exception->getTraceAsString());
         }
-
 
         try {
             if (is_null($payment->getParentTransactionId())) {

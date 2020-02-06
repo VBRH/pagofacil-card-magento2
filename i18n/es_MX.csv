@@ -28,3 +28,4 @@
 "Monthly payment", "Pago mensual"
 "The string are not empty", "La cadena no debe estar vacia."
 "status code out of the range", "El código de estado esta fuera del rango"
+"No have a default billing address, please complete the profile address configurations", "No tiene una dirección de facturación predeterminada, complete las configuraciones de dirección de perfil"
