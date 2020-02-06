@@ -30,8 +30,6 @@ class Response extends AbstractResponse
      */
     public function __construct(string $body, int $statusCode)
     {
-        /** @var LoggerInterface $logger */
-        $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
         $this->validateStatusCodeRange($statusCode);
         $this->statusCode = $statusCode;
         $this->body = $body;
