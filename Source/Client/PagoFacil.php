@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Source\Client;
 
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\HTTP\ClientInterface as HttpClientInterface;
 use PagoFacil\Payment\Exceptions\HttpException;
 use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
@@ -20,11 +19,17 @@ class PagoFacil implements ClientInterface
     private $magentoClient;
     /** @var string $url */
     private $url;
+    /** @var LoggerInterface $logger */
+    private $logger;
 
-    public function __construct(string $url)
-    {
-        $this->magentoClient = ObjectManager::getInstance()->get(HttpClientInterface::class);
+    public function __construct(
+        string $url,
+        HttpClientInterface $client,
+        LoggerInterface $logger
+    ) {
+        $this->magentoClient = $client;
         $this->url = $url;
+        $this->logger = $logger;
     }
 
     /**
@@ -34,17 +39,18 @@ class PagoFacil implements ClientInterface
      */
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
-        /** @var LoggerInterface $logger */
-        $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
+        /** @var ResponseInterface $response */
+        $response = null;
 
         try {
             $this->magentoClient->post($this->url, $request->getBody());
+             $response = new Response($this->magentoClient->getBody(), $this->magentoClient->getStatus());
         } catch (Exception $exception) {
-            $logger->error($exception->getMessage());
-            $logger->error($exception->getTraceAsString());
+            $this->logger->error($exception->getMessage());
+            $this->logger->error($exception->getTraceAsString());
             throw new HttpException($exception->getMessage());
         }
 
-        return new Response($this->magentoClient->getBody(), $this->magentoClient->getStatus());
+        return $response;
     }
 }

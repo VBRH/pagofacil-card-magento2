@@ -24,6 +24,7 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment;
 use Magento\Framework\App\ObjectManager;
 use Magento\Customer\Model\{Customer, Address};
+use Magento\Framework\HTTP\ClientInterface as HttpClientInterface;
 use PagoFacil\Payment\Exceptions\AmountException;
 use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\HttpException;
@@ -137,7 +138,11 @@ class PagoFacilCard extends AbstractCard implements Card
         try {
             Register::add(
                 'client',
-                new Client($this->user->getEndpoint()->getCompleteUrl())
+                new Client(
+                    $this->user->getEndpoint()->getCompleteUrl(),
+                    ObjectManager::getInstance()->get(HttpClientInterface::class),
+                    ObjectManager::getInstance()->get(LoggerInterface::class)
+                )
             );
         } catch (Exception $exception) {
             $this->zendLogger->alert($exception->getMessage());
@@ -200,16 +205,22 @@ class PagoFacilCard extends AbstractCard implements Card
             $order->setStatus(Order::STATE_PROCESSING);
             $payment->setIsTransactionClosed(true);
 
-        } catch (ClientException $exception) {
+        } catch (ClientException|HttpException $exception) {
             $payment->setIsTransactionClosed(false);
             $payment->setIsTransactionPending(true);
             $logger->error($exception->getMessage());
+            $logger->error($exception->getTraceAsString());
+            throw $exception;
         } catch (PaymentException $exception) {
             $payment->setTransactionId($exception->getCharge()->getId());
             $payment->setIsTransactionClosed(false);
             $payment->setIsTransactionPending(true);
             $charge = $exception->getCharge();
             $logger->error($exception->getMessage());
+        } catch (Exception $exception) {
+            $logger->error($exception->getMessage());
+            $logger->error($exception->getTraceAsString());
+            throw $exception;
         } finally {
             Register::removeInstance();
             if (!is_null($charge)) {
