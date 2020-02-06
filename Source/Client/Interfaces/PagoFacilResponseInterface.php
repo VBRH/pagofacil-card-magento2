@@ -2,6 +2,7 @@
 
 namespace PagoFacil\Payment\Source\Client\Interfaces;
 
+use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Source\Transaction\Charge;
 use Psr\Http\Message\ResponseInterface;
@@ -20,6 +21,7 @@ interface PagoFacilResponseInterface extends ResponseInterface
 
     /**
      * @return Charge
+     * @throws ClientException
      */
     public function getTransaction(): Charge;
 }

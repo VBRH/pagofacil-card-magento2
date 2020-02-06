@@ -87,6 +87,7 @@ abstract class AbstractCard extends CreditCard
     /**
      * @param PagoFacilResponseInterface $response
      * @return Dto
+     * @throws ClientException
      */
     public function getTransaction(PagoFacilResponseInterface $response): Dto
     {

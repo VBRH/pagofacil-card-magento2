@@ -217,7 +217,7 @@ class PagoFacilCard extends AbstractCard implements Card
             $payment->setIsTransactionPending(true);
             $charge = $exception->getCharge();
             $logger->error($exception->getMessage());
-        } catch (Exception $exception) {
+        } catch (Exception|AmountException $exception) {
             $logger->error($exception->getMessage());
             $logger->error($exception->getTraceAsString());
             throw $exception;
@@ -238,6 +238,7 @@ class PagoFacilCard extends AbstractCard implements Card
      * @throws AmountException
      * @throws PaymentException
      * @throws HttpException
+     * @throws ClientException
      */
     public function authorize(InfoInterface $payment, $amount)
     {

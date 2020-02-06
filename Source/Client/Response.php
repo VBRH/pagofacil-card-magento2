@@ -6,6 +6,7 @@ namespace PagoFacil\Payment\Source\Client;
 
 use InvalidArgumentException;
 use Magento\Framework\App\ObjectManager;
+use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\HttpException;
 use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Source\Client\Interfaces\ClientInterface as HTTPInterface;
@@ -111,12 +112,28 @@ class Response extends AbstractResponse
         return Charge::setCode($charge, 1, 'deny_transaction');
     }
 
+    /**
+     * @return Charge
+     * @throws ClientException
+     */
     public function getTransaction(): Charge
     {
+        $this->validateTransactionData();
+
         return new Charge(
             $this->getBodyToArray()['transaccion']['idTransaccion'],
             $this->getBodyToArray()['transaccion']['data']['idPedido'],
             $this->getBodyToArray()['transaccion']['pf_message']
         );
+    }
+
+    /**
+     * @throws ClientException
+     */
+    protected function validateTransactionData():void
+    {
+        if(!in_array('idTransaccion', $this->getBodyToArray()['transaccion'])) {
+            throw new ClientException("The transaction are failed, please connecting to local admin.");
+        }
     }
 }
