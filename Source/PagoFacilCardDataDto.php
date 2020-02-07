@@ -6,6 +6,7 @@ namespace PagoFacil\Payment\Source;
 
 use ArrayObject;
 use Magento\Customer\Model\Address;
+use Magento\Customer\Model\Address\AbstractAddress;
 use Magento\Sales\Model\Order;
 use PagoFacil\Payment\Source\User\Client;
 use PagoFacil\Payment\Source\Interfaces\Dto;
@@ -39,7 +40,7 @@ class PagoFacilCardDataDto implements Dto
         Client $user,
         Order $order,
         ArrayObject $paymentData,
-        Address $billingAddress
+        AbstractAddress $billingAddress
     ) {
         $this->user = $user;
         $this->order = $order;

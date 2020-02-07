@@ -7,9 +7,12 @@ namespace PagoFacil\Payment\Source\Client;
 use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
 use PagoFacil\Payment\Source\Transaction\Charge;
 use Psr\Http\Message\StreamInterface;
+use Psr\Log\LoggerInterface;
 
 abstract class AbstractResponse implements PagoFacilResponseInterface
 {
+    /** @var LoggerInterface */
+    protected $logger;
 
     /**
      * @inheritDoc

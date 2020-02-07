@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.5] 2020-02-07
+This version only contain a better error handler for give in a better error information to final customer and the
+development area.
+### Added
+Both in the Response class and the base abstract class for card model has a custom validation functions.
+> This validation don't return nothing, but throw a Exception (ClientException class) for handling the errors in the http client flow.
+> The base abstract PagoFacil exception class are implemented a custom error code not numeric, these codes are a string.
+### Changed
+> The logger instance in the response class and Http client Class are passed by dependency injection.
+### Removed
+- Logger implementen into the directory Client's class
+> The logger implementation is removed in the Response and Http client class, and now, the responsability is 
+> the class that implements it
+
+## [v0.3.x]
 ### Added
 - Exceptions for better error handling.
 > Added new abstract base exception that extends to Magento's LocalizedException, and created more exceptions that
