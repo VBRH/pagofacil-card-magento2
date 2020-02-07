@@ -11,6 +11,7 @@ use Magento\Framework\Api\AttributeValueFactory;
 use Magento\Framework\Api\ExtensionAttributesFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Data\Collection\AbstractDb;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Module\ModuleListInterface;
@@ -23,8 +24,10 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment;
 use Magento\Framework\App\ObjectManager;
 use Magento\Customer\Model\{Customer, Address};
+use Magento\Framework\HTTP\ClientInterface as HttpClientInterface;
 use PagoFacil\Payment\Exceptions\AmountException;
 use PagoFacil\Payment\Exceptions\ClientException;
+use PagoFacil\Payment\Exceptions\HttpException;
 use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Model\Payment\Abstracts\AbstractCard;
 use PagoFacil\Payment\Model\Payment\Interfaces\Card;
@@ -135,7 +138,11 @@ class PagoFacilCard extends AbstractCard implements Card
         try {
             Register::add(
                 'client',
-                new Client($this->user->getEndpoint()->getCompleteUrl())
+                new Client(
+                    $this->user->getEndpoint()->getCompleteUrl(),
+                    ObjectManager::getInstance()->get(HttpClientInterface::class),
+                    ObjectManager::getInstance()->get(LoggerInterface::class)
+                )
             );
         } catch (Exception $exception) {
             $this->zendLogger->alert($exception->getMessage());
@@ -148,7 +155,7 @@ class PagoFacilCard extends AbstractCard implements Card
      * @param float $amount
      * @return self
      * @throws AmountException
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function capture(InfoInterface $payment, $amount): self
     {
@@ -171,7 +178,7 @@ class PagoFacilCard extends AbstractCard implements Card
         $paymentData = new ArrayObject(Register::bringOut('card_data'));
         $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
         $customer = ObjectManager::getInstance()->get(CustomerFactory::class)->create()->load($order->getCustomerId());
-        $billingAddress = $customer->getDefaultBillingAddress();
+        $billingAddress = $this->validateDefaultBillingAddress($customer->getDefaultBillingAddress());
         $user = Register::bringOut('user');
         $plan = 'NOR';
         $paymentData->offsetSet('plan', $plan);
@@ -183,12 +190,12 @@ class PagoFacilCard extends AbstractCard implements Card
         }
 
         $cardDataDto = new PagoFacilCardDataDto($user, $order, $paymentData, $billingAddress, );
+
         try {
             $this->createTransactionInformation($cardDataDto);
         } catch (Exception $exception) {
             $logger->alert($exception->getTraceAsString());
         }
-
 
         try {
             if (is_null($payment->getParentTransactionId())) {
@@ -198,16 +205,25 @@ class PagoFacilCard extends AbstractCard implements Card
             $order->setStatus(Order::STATE_PROCESSING);
             $payment->setIsTransactionClosed(true);
 
-        } catch (ClientException $exception) {
+        } catch (ClientException|HttpException $exception) {
             $payment->setIsTransactionClosed(false);
             $payment->setIsTransactionPending(true);
+            $logger->error($exception->getExceptionCode());
             $logger->error($exception->getMessage());
+            $logger->error($exception->getTraceAsString());
+            throw $exception;
         } catch (PaymentException $exception) {
             $payment->setTransactionId($exception->getCharge()->getId());
             $payment->setIsTransactionClosed(false);
             $payment->setIsTransactionPending(true);
             $charge = $exception->getCharge();
+            $logger->error($exception->getExceptionCode());
             $logger->error($exception->getMessage());
+        } catch (Exception|AmountException $exception) {
+            $logger->error($exception->getExceptionCode());
+            $logger->error($exception->getMessage());
+            $logger->error($exception->getTraceAsString());
+            throw $exception;
         } finally {
             Register::removeInstance();
             if (!is_null($charge)) {
@@ -218,6 +234,15 @@ class PagoFacilCard extends AbstractCard implements Card
         return $this;
     }
 
+    /**
+     * @param InfoInterface $payment
+     * @param float $amount
+     * @return $this|AbstractCard
+     * @throws AmountException
+     * @throws PaymentException
+     * @throws HttpException
+     * @throws ClientException
+     */
     public function authorize(InfoInterface $payment, $amount)
     {
         /** @var Payment $payment */
