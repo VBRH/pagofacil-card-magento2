@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Model\Payment\Abstracts;
 
+use Magento\Customer\Model\Address\AbstractAddress;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\DataObject;
 use Magento\Payment\Model\Method\Cc as CreditCard;
 use PagoFacil\Payment\Exceptions\AmountException;
+use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Source\Client\Interfaces\ClientInterface;
 use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
@@ -85,6 +87,7 @@ abstract class AbstractCard extends CreditCard
     /**
      * @param PagoFacilResponseInterface $response
      * @return Dto
+     * @throws ClientException
      */
     public function getTransaction(PagoFacilResponseInterface $response): Dto
     {
@@ -117,5 +120,19 @@ abstract class AbstractCard extends CreditCard
         asort($months);
 
         return $months;
+    }
+
+    /**
+     * @param $data
+     * @return AbstractAddress
+     * @throws ClientException
+     */
+    protected function validateDefaultBillingAddress($data): AbstractAddress
+    {
+        if (!$data instanceof AbstractAddress) {
+            throw new ClientException("No have a default billing address, please complete the profile address configurations");
+        }
+        /** @var AbstractAddress $data */
+        return $data;
     }
 }

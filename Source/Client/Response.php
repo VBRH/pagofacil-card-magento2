@@ -6,6 +6,7 @@ namespace PagoFacil\Payment\Source\Client;
 
 use InvalidArgumentException;
 use Magento\Framework\App\ObjectManager;
+use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\HttpException;
 use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Source\Client\Interfaces\ClientInterface as HTTPInterface;
@@ -28,15 +29,14 @@ class Response extends AbstractResponse
      * @param int $statusCode
      * @throws InvalidArgumentException
      */
-    public function __construct(string $body, int $statusCode)
+    public function __construct(string $body, int $statusCode, LoggerInterface $logger)
     {
         $this->validateStatusCodeRange($statusCode);
         $this->statusCode = $statusCode;
         $this->body = $body;
         $this->parseJsonToArray();
+        $this->logger = $logger;
 
-        /** @var LoggerInterface $logger */
-        $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
     }
 
     /**
@@ -93,6 +93,7 @@ class Response extends AbstractResponse
 
     /**
      * @throws PaymentException
+     * @throws \Exception
      */
     public function validateAuthorized(): void
     {
@@ -112,12 +113,32 @@ class Response extends AbstractResponse
         return Charge::setCode($charge, 1, 'deny_transaction');
     }
 
+    /**
+     * @return Charge
+     * @throws ClientException
+     */
     public function getTransaction(): Charge
     {
+        $this->validateTransactionData();
+
         return new Charge(
             $this->getBodyToArray()['transaccion']['idTransaccion'],
             $this->getBodyToArray()['transaccion']['data']['idPedido'],
             $this->getBodyToArray()['transaccion']['pf_message']
         );
+    }
+
+    /**
+     * @throws ClientException
+     */
+    protected function validateTransactionData():void
+    {
+        if(!in_array('idTransaccion', $this->getBodyToArray()['transaccion'])) {
+            $this->logger->info($this->getBody());
+            throw ClientException::setErrorCode(
+                new ClientException("The transaction are failed, please connecting to local admin."),
+                ClientException::$error_key
+            );
+        }
     }
 }
