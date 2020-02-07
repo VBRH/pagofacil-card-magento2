@@ -208,6 +208,7 @@ class PagoFacilCard extends AbstractCard implements Card
         } catch (ClientException|HttpException $exception) {
             $payment->setIsTransactionClosed(false);
             $payment->setIsTransactionPending(true);
+            $logger->error($exception->getExceptionCode());
             $logger->error($exception->getMessage());
             $logger->error($exception->getTraceAsString());
             throw $exception;

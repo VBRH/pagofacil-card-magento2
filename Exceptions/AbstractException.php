@@ -12,6 +12,8 @@ abstract class AbstractException extends LocalizedException
     /** @var string $exceptionCode */
     private $exceptionCode;
 
+    static protected $error_standard = 'no_exception_event';
+
     /**
      * AbstractException constructor.
      * @param string $phrase
@@ -21,6 +23,7 @@ abstract class AbstractException extends LocalizedException
     public function __construct(string $phrase, $code = 0, Exception $cause = null)
     {
         parent::__construct(__($phrase), $cause, $code);
+        $this->setExceptionCode(static::$error_standard);
     }
 
     /**
