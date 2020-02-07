@@ -135,7 +135,10 @@ class Response extends AbstractResponse
     {
         if(!in_array('idTransaccion', $this->getBodyToArray()['transaccion'])) {
             $this->logger->info($this->getBody());
-            throw new ClientException("The transaction are failed, please connecting to local admin.");
+            throw ClientException::setErrorCode(
+                new ClientException("The transaction are failed, please connecting to local admin."),
+                ClientException::$error_key
+            );
         }
     }
 }
