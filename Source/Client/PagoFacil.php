@@ -44,7 +44,10 @@ class PagoFacil implements ClientInterface
 
         try {
             $this->magentoClient->post($this->url, $request->getBody());
-             $response = new Response($this->magentoClient->getBody(), $this->magentoClient->getStatus());
+             $response = new Response(
+                 $this->magentoClient->getBody(), $this->magentoClient->getStatus(),
+                 $this->logger
+             );
         } catch (Exception $exception) {
             $this->logger->error($exception->getMessage());
             $this->logger->error($exception->getTraceAsString());

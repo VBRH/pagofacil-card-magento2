@@ -29,12 +29,13 @@ class Response extends AbstractResponse
      * @param int $statusCode
      * @throws InvalidArgumentException
      */
-    public function __construct(string $body, int $statusCode)
+    public function __construct(string $body, int $statusCode, LoggerInterface $logger)
     {
         $this->validateStatusCodeRange($statusCode);
         $this->statusCode = $statusCode;
         $this->body = $body;
         $this->parseJsonToArray();
+        $this->logger = $logger;
 
     }
 
@@ -133,6 +134,7 @@ class Response extends AbstractResponse
     protected function validateTransactionData():void
     {
         if(!in_array('idTransaccion', $this->getBodyToArray()['transaccion'])) {
+            $this->logger->info($this->getBody());
             throw new ClientException("The transaction are failed, please connecting to local admin.");
         }
     }
