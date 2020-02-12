@@ -133,7 +133,7 @@ class Response extends AbstractResponse
      */
     protected function validateTransactionData():void
     {
-        if(!in_array('idTransaccion', $this->getBodyToArray()['transaccion'])) {
+        if(!array_key_exists('idTransaccion', $this->getBodyToArray()['transaccion'])) {
             $this->logger->info($this->getBody());
             throw ClientException::setErrorCode(
                 new ClientException("The transaction are failed, please connecting to local admin."),
