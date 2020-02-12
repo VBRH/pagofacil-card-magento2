@@ -6,16 +6,15 @@ namespace PagoFacil\Payment\Source\Client;
 
 use InvalidArgumentException;
 use Magento\Framework\App\ObjectManager;
+use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\HttpException;
 use PagoFacil\Payment\Exceptions\PaymentException;
-use PagoFacil\Payment\Source\Client\ClientInterface as HTTPInterface;
-use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
+use PagoFacil\Payment\Source\Client\Interfaces\ClientInterface as HTTPInterface;
 use PagoFacil\Payment\Source\Interfaces\Dto;
 use PagoFacil\Payment\Source\Transaction\Charge;
-use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 
-class Response implements PagoFacilResponseInterface
+class Response extends AbstractResponse
 {
     /** @var int $statusCode */
     private $statusCode;
@@ -30,15 +29,14 @@ class Response implements PagoFacilResponseInterface
      * @param int $statusCode
      * @throws InvalidArgumentException
      */
-    public function __construct(string $body, int $statusCode)
+    public function __construct(string $body, int $statusCode, LoggerInterface $logger)
     {
         $this->validateStatusCodeRange($statusCode);
         $this->statusCode = $statusCode;
         $this->body = $body;
         $this->parseJsonToArray();
+        $this->logger = $logger;
 
-        /** @var LoggerInterface $logger */
-        $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
     }
 
     /**
@@ -78,7 +76,7 @@ class Response implements PagoFacilResponseInterface
     protected function validateStatusCodeRange(int $code): void
     {
         if (100 > $code || 600 <= $code) {
-            throw new \InvalidArgumentException('status code out of the range');
+            throw new \InvalidArgumentException(__('status code out of the range'));
         }
     }
 
@@ -95,6 +93,7 @@ class Response implements PagoFacilResponseInterface
 
     /**
      * @throws PaymentException
+     * @throws \Exception
      */
     public function validateAuthorized(): void
     {
@@ -114,107 +113,32 @@ class Response implements PagoFacilResponseInterface
         return Charge::setCode($charge, 1, 'deny_transaction');
     }
 
+    /**
+     * @return Charge
+     * @throws ClientException
+     */
     public function getTransaction(): Charge
     {
+        $this->validateTransactionData();
+
         return new Charge(
             $this->getBodyToArray()['transaccion']['idTransaccion'],
             $this->getBodyToArray()['transaccion']['data']['idPedido'],
             $this->getBodyToArray()['transaccion']['pf_message']
         );
     }
-    /**
-     * @inheritDoc
-     */
-    public function getProtocolVersion()
-    {
-        // TODO: Implement getProtocolVersion() method.
-    }
 
     /**
-     * @inheritDoc
+     * @throws ClientException
      */
-    public function withProtocolVersion($version)
+    protected function validateTransactionData():void
     {
-        // TODO: Implement withProtocolVersion() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getHeaders()
-    {
-        // TODO: Implement getHeaders() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function hasHeader($name)
-    {
-        // TODO: Implement hasHeader() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getHeader($name)
-    {
-        // TODO: Implement getHeader() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getHeaderLine($name)
-    {
-        // TODO: Implement getHeaderLine() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function withHeader($name, $value)
-    {
-        // TODO: Implement withHeader() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function withAddedHeader($name, $value)
-    {
-        // TODO: Implement withAddedHeader() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function withoutHeader($name)
-    {
-        // TODO: Implement withoutHeader() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function withBody(StreamInterface $body)
-    {
-        // TODO: Implement withBody() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function withStatus($code, $reasonPhrase = '')
-    {
-        // TODO: Implement withStatus() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getReasonPhrase()
-    {
-        // TODO: Implement getReasonPhrase() method.
+        if(!array_key_exists('idTransaccion', $this->getBodyToArray()['transaccion'])) {
+            $this->logger->info($this->getBody());
+            throw ClientException::setErrorCode(
+                new ClientException("The transaction are failed, please connecting to local admin."),
+                ClientException::$error_key
+            );
+        }
     }
 }

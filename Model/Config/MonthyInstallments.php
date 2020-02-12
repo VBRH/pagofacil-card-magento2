@@ -19,26 +19,26 @@ class MonthyInstallments implements OptionSourceInterface
         $this->monthyOptions = new ArrayObject([
             [
                 'value' => 3,
-                'label' => __('3 Meses')
+                'label' => __('3 Months')
             ],
             [
                 'value' => 6,
-                'label' => __('6 Meses')
+                'label' => __('6 Months')
             ],
             [
                 'value' => 9,
-                'label' => __('9 Meses')
+                'label' => __('9 Months')
             ],
             [
                 'value' => 12,
-                'label' => __('12 Meses')
+                'label' => __('12 Months')
             ]
         ]);
         $this->monthyValues = new ArrayObject([
-            3 => __('3 Meses'),
-            6 => __('6 Meses'),
-            9 => __('9 Meses'),
-            12 => __('12 Meses')
+            3 => __('3 Months'),
+            6 => __('6 Months'),
+            9 => __('9 Months'),
+            12 => __('12 Months')
         ]);
     }
 
