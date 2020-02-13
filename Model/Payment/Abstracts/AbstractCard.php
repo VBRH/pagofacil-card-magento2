@@ -62,7 +62,7 @@ abstract class AbstractCard extends CreditCard
                 'idServicio' => 3,
                 'monto' => $cardData->getOrder()->getGrandTotal(),
                 'plan' => $cardData->getPaymentData()->offsetGet('plan'),
-                'mensualidad' => $cardData->getPaymentData()->offsetGet('monthly-installments'),
+                'mensualidades' => $cardData->getPaymentData()->offsetGet('monthly-installments'),
                 'numeroTarjeta' => $cardData->getPaymentData()->offsetGet('cc_number'),
                 'cvt' => $cardData->getPaymentData()->offsetGet('cc_cid'),
                 'mesExpiracion' => $cardData->getPaymentData()->offsetGet('cc_exp_month'),
