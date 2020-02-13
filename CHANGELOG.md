@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Change
 Response json validation
 > The validaton json used in_array and not array_key_exists for search key. The error are fixed for this version.
+> The syntax error for monthly installments is corrected.
 
 ## [0.3.5] 2020-02-07
 This version only contain a better error handler for give in a better error information to final customer and the
