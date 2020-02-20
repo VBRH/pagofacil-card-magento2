@@ -9,7 +9,6 @@
         "psr/http-message": "1.0.*"
     },
     "type": "magento2-module",
-    "version": "100.0.3",
     "license": [
         "OSL-3.0",
         "AFL-3.0"
