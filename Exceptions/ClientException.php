@@ -10,6 +10,7 @@ class ClientException extends AbstractException implements ClientExceptionInterf
 {
     /** @var string $error_key */
     static public $error_key = 'error_admin_config';
+    static public $error_transaction = 'error_transaction_pagofacil';
 
     /**
      * @param ClientException $object
