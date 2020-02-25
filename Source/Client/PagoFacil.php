@@ -7,6 +7,7 @@ namespace PagoFacil\Payment\Source\Client;
 use Magento\Framework\HTTP\ClientInterface as HttpClientInterface;
 use PagoFacil\Payment\Exceptions\HttpException;
 use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
+use PagoFacil\Payment\Source\Client\Interfaces\ResponseFactory;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -21,15 +22,26 @@ class PagoFacil implements ClientInterface
     private $url;
     /** @var LoggerInterface $logger */
     private $logger;
+    /** @var ResponseFactory $responseFactory */
+    private $responseFactory;
 
+    /**
+     * PagoFacil constructor.
+     * @param string $url
+     * @param HttpClientInterface $client
+     * @param LoggerInterface $logger
+     * @param ResponseFactory $factory
+     */
     public function __construct(
         string $url,
         HttpClientInterface $client,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ResponseFactory $factory
     ) {
         $this->magentoClient = $client;
         $this->url = $url;
         $this->logger = $logger;
+        $this->responseFactory = $factory;
     }
 
     /**
@@ -44,7 +56,7 @@ class PagoFacil implements ClientInterface
 
         try {
             $this->magentoClient->post($this->url, $request->getBody());
-             $response = new Response(
+             $response = $this->responseFactory->createResponse(
                  $this->magentoClient->getBody(), $this->magentoClient->getStatus(),
                  $this->logger
              );

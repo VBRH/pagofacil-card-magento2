@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Source\Client;
 
+use InvalidArgumentException;
+use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
+use PagoFacil\Payment\Source\Interfaces\Dto;
 use PagoFacil\Payment\Source\Transaction\Charge;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
@@ -13,6 +16,25 @@ abstract class AbstractResponse implements PagoFacilResponseInterface
 {
     /** @var LoggerInterface */
     protected $logger;
+    /** @var int $statusCode */
+    protected $statusCode;
+    /** @var string $body */
+    protected $body;
+
+    /**
+     * Response constructor.
+     * @param string $body
+     * @param int $statusCode
+     * @throws InvalidArgumentException
+     */
+    public function __construct(string $body, int $statusCode, LoggerInterface $logger)
+    {
+        $this->validateStatusCodeRange($statusCode);
+        $this->statusCode = $statusCode;
+        $this->body = $body;
+        $this->parseJsonToArray();
+        $this->logger = $logger;
+    }
 
     /**
      * @inheritDoc
@@ -111,7 +133,7 @@ abstract class AbstractResponse implements PagoFacilResponseInterface
     }
 
     /**
-     * @inheritDoc
+     * @return array
      */
     public function getBodyToArray(): array
     {
@@ -119,9 +141,9 @@ abstract class AbstractResponse implements PagoFacilResponseInterface
     }
 
     /**
-     * @inheritDoc
+     * @return Dto
      */
-    public function getTransaction(): Charge
+    public function getTransaction(): Dto
     {
         // TODO: Implement getTransaction() method.
     }
@@ -149,4 +171,22 @@ abstract class AbstractResponse implements PagoFacilResponseInterface
     {
         // TODO: Implement getReasonPhrase() method.
     }
+
+    /**
+     * @param int $code
+     * @throws InvalidArgumentException
+     */
+    protected function validateStatusCodeRange(int $code): void
+    {
+        if (100 > $code || 600 <= $code) {
+            throw new \InvalidArgumentException(__('status code out of the range'));
+        }
+    }
+
+    abstract protected function parseJsonToArray(): void;
+
+    /**
+     * @throws ClientException
+     */
+    abstract protected function validateTransactionData():void;
 }

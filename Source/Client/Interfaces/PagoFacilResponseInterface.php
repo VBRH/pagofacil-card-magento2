@@ -4,7 +4,7 @@ namespace PagoFacil\Payment\Source\Client\Interfaces;
 
 use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\PaymentException;
-use PagoFacil\Payment\Source\Transaction\Charge;
+use PagoFacil\Payment\Source\Interfaces\Dto;
 use Psr\Http\Message\ResponseInterface;
 
 interface PagoFacilResponseInterface extends ResponseInterface
@@ -20,8 +20,8 @@ interface PagoFacilResponseInterface extends ResponseInterface
     public function getBodyToArray(): array;
 
     /**
-     * @return Charge
+     * @return Dto
      * @throws ClientException
      */
-    public function getTransaction(): Charge;
+    public function getTransaction(): Dto;
 }

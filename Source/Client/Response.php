@@ -4,40 +4,17 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Source\Client;
 
-use InvalidArgumentException;
-use Magento\Framework\App\ObjectManager;
 use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\HttpException;
 use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Source\Client\Interfaces\ClientInterface as HTTPInterface;
 use PagoFacil\Payment\Source\Interfaces\Dto;
 use PagoFacil\Payment\Source\Transaction\Charge;
-use Psr\Log\LoggerInterface;
 
 class Response extends AbstractResponse
 {
-    /** @var int $statusCode */
-    private $statusCode;
-    /** @var string $body */
-    private $body;
     /** @var array $arrayTransaction */
     private $arrayTransaction;
-
-    /**
-     * Response constructor.
-     * @param string $body
-     * @param int $statusCode
-     * @throws InvalidArgumentException
-     */
-    public function __construct(string $body, int $statusCode, LoggerInterface $logger)
-    {
-        $this->validateStatusCodeRange($statusCode);
-        $this->statusCode = $statusCode;
-        $this->body = $body;
-        $this->parseJsonToArray();
-        $this->logger = $logger;
-
-    }
 
     /**
      * @return int
@@ -69,16 +46,6 @@ class Response extends AbstractResponse
         return $this->body;
     }
 
-    /**
-     * @param int $code
-     * @throws InvalidArgumentException
-     */
-    protected function validateStatusCodeRange(int $code): void
-    {
-        if (100 > $code || 600 <= $code) {
-            throw new \InvalidArgumentException(__('status code out of the range'));
-        }
-    }
 
     protected function parseJsonToArray(): void
     {
