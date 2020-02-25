@@ -4,24 +4,131 @@ declare(strict_types=1);
 
 namespace PagoFacil\Payment\Model\Payment\Abstracts;
 
+use Exception;
 use Magento\Customer\Model\Address\AbstractAddress;
+use Magento\Framework\Api\AttributeValueFactory;
+use Magento\Framework\Api\ExtensionAttributesFactory;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\DataObject;
+use Magento\Framework\HTTP\ClientInterface as HttpClientInterface;
+use Magento\Framework\Model\Context;
+use Magento\Framework\Model\ResourceModel\AbstractResource;
+use Magento\Framework\Module\ModuleListInterface;
+use Magento\Framework\Registry;
+use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
+use Magento\Payment\Helper\Data;
 use Magento\Payment\Model\Method\Cc as CreditCard;
+use Magento\Payment\Model\Method\Logger;
 use PagoFacil\Payment\Exceptions\AmountException;
 use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\PaymentException;
+use PagoFacil\Payment\Model\Payment\ConfigData;
+use PagoFacil\Payment\Source\Client\CardResponseFactory;
+use PagoFacil\Payment\Source\Client\EndPoint;
 use PagoFacil\Payment\Source\Client\Interfaces\ClientInterface;
 use PagoFacil\Payment\Source\Client\Interfaces\PagoFacilResponseInterface;
+use PagoFacil\Payment\Source\Client\PagoFacil as Client;
+use PagoFacil\Payment\Source\Client\Response;
 use PagoFacil\Payment\Source\Interfaces\Dto;
 use PagoFacil\Payment\Source\PagoFacilCardDataDto;
 use PagoFacil\Payment\Source\Register;
+use PagoFacil\Payment\Source\User\Client as UserClient;
 use Psr\Log\LoggerInterface;
 
 abstract class AbstractCard extends CreditCard
 {
-    protected $monthlyInstallments;
+    use ConfigData;
 
+    protected $monthlyInstallments;
+    /** @var EndPoint $endpoint */
+    private $endpoint;
+    /** @var UserClient $user */
+    private $user;
+    /** @var Client $client  */
+    private $client;
+
+    /**
+     * PagoFacilCard constructor.
+     * @param Context $context
+     * @param Registry $registry
+     * @param ExtensionAttributesFactory $extensionFactory
+     * @param AttributeValueFactory $customAttributeFactory
+     * @param Data $paymentData
+     * @param ScopeConfigInterface $scopeConfig
+     * @param Logger $logger
+     * @param ModuleListInterface $moduleList
+     * @param TimezoneInterface $localeDate
+     * @param AbstractResource|null $resource
+     * @param AbstractDb|null $resourceCollection
+     * @param array $data
+     * @throws Exception
+     */
+    public function __construct(
+        Context $context,
+        Registry $registry,
+        ExtensionAttributesFactory $extensionFactory,
+        AttributeValueFactory $customAttributeFactory,
+        Data $paymentData,
+        ScopeConfigInterface $scopeConfig,
+        Logger $logger,
+        ModuleListInterface $moduleList,
+        TimezoneInterface $localeDate,
+        ?AbstractResource $resource = null,
+        ?AbstractDb $resourceCollection = null,
+        array $data = []
+    ) {
+        $this->createLocalLogger(static::CODE);
+        $this->_isGateway = true;
+        $this->_canCapture = true;
+        $this->_canAuthorize = true;
+        $this->_canCapturePartial = true;
+        $this->_code = static::CODE;
+
+        parent::__construct(
+            $context,
+            $registry,
+            $extensionFactory,
+            $customAttributeFactory,
+            $paymentData,
+            $scopeConfig,
+            $logger,
+            $moduleList,
+            $localeDate,
+            $resource,
+            $resourceCollection,
+            $data
+        );
+
+        /** @var LoggerInterface $logger */
+        $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
+        $this->getUrlEnviroment('uri_transaction');
+
+        if ((integer)$this->getConfigData('monthy_installment_enabled')) {
+            $this->monthlyInstallments = $this->getConfigData('monthly_installments');
+        }
+
+        try {
+            Register::add('user', $this->user);
+        } catch (Exception $exception) {
+            $logger->alert($exception->getMessage());
+        }
+
+        try {
+            Register::add(
+                'client',
+                new Client(
+                    $this->user->getEndpoint()->getCompleteUrl(),
+                    ObjectManager::getInstance()->get(HttpClientInterface::class),
+                    ObjectManager::getInstance()->get(LoggerInterface::class),
+                    new CardResponseFactory()
+                )
+            );
+        } catch (Exception $exception) {
+            $logger->alert($exception->getMessage());
+        }
+    }
     /**
      * @param DataObject $data
      * @return $this|CreditCard

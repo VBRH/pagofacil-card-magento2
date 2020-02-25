@@ -7,149 +7,29 @@ namespace PagoFacil\Payment\Model\Payment;
 use ArrayObject;
 use Exception;
 use Magento\Customer\Model\CustomerFactory;
-use Magento\Framework\Api\AttributeValueFactory;
-use Magento\Framework\Api\ExtensionAttributesFactory;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Model\Context;
-use Magento\Framework\Model\ResourceModel\AbstractResource;
-use Magento\Framework\Module\ModuleListInterface;
-use Magento\Framework\Registry;
-use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
-use Magento\Payment\Helper\Data;
 use Magento\Payment\Model\InfoInterface;
-use Magento\Payment\Model\Method\Logger;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment;
 use Magento\Framework\App\ObjectManager;
 use Magento\Customer\Model\{Customer, Address};
-use Magento\Framework\HTTP\ClientInterface as HttpClientInterface;
 use PagoFacil\Payment\Exceptions\AmountException;
 use PagoFacil\Payment\Exceptions\ClientException;
 use PagoFacil\Payment\Exceptions\HttpException;
 use PagoFacil\Payment\Exceptions\PaymentException;
 use PagoFacil\Payment\Model\Payment\Abstracts\AbstractCard;
 use PagoFacil\Payment\Model\Payment\Interfaces\Card;
-use PagoFacil\Payment\Model\Payment\Interfaces\ConfigInterface;
 use PagoFacil\Payment\Source\Client\Interfaces\ClientInterface;
-use PagoFacil\Payment\Source\Client\EndPoint;
 use PagoFacil\Payment\Source\Client\PagoFacil as Client;
 use PagoFacil\Payment\Source\Client\PrimitiveRequest;
 use PagoFacil\Payment\Source\Transaction\Charge;
 use PagoFacil\Payment\Source\User\Client as UserClient;
-use PagoFacil\Payment\Source\Logger as PagoFacilLogger;
 use PagoFacil\Payment\Source\Register;
 use PagoFacil\Payment\Source\PagoFacilCardDataDto;
 use Psr\Log\LoggerInterface;
 
 class PagoFacilCard extends AbstractCard implements Card
 {
-    use PagoFacilLogger;
-    use ConfigData;
-
-    /** @var EndPoint $endpoint */
-    private $endpoint;
-    /** @var UserClient $user */
-    private $user;
-    /** @var Client $client  */
-    private $client;
-
-    /**
-     * PagoFacilCard constructor.
-     * @param Context $context
-     * @param Registry $registry
-     * @param ExtensionAttributesFactory $extensionFactory
-     * @param AttributeValueFactory $customAttributeFactory
-     * @param Data $paymentData
-     * @param ScopeConfigInterface $scopeConfig
-     * @param Logger $logger
-     * @param ModuleListInterface $moduleList
-     * @param TimezoneInterface $localeDate
-     * @param AbstractResource|null $resource
-     * @param AbstractDb|null $resourceCollection
-     * @param array $data
-     * @throws Exception
-     */
-    public function __construct(
-        Context $context,
-        Registry $registry,
-        ExtensionAttributesFactory $extensionFactory,
-        AttributeValueFactory $customAttributeFactory,
-        Data $paymentData,
-        ScopeConfigInterface $scopeConfig,
-        Logger $logger,
-        ModuleListInterface $moduleList,
-        TimezoneInterface $localeDate,
-        ?AbstractResource $resource = null,
-        ?AbstractDb $resourceCollection = null,
-        array $data = []
-    ) {
-        $this->createLocalLogger(static::CODE);
-        $this->_isGateway = true;
-        $this->_canCapture = true;
-        $this->_canAuthorize = true;
-        $this->_canCapturePartial = true;
-        $this->_code = static::CODE;
-
-        parent::__construct(
-            $context,
-            $registry,
-            $extensionFactory,
-            $customAttributeFactory,
-            $paymentData,
-            $scopeConfig,
-            $logger,
-            $moduleList,
-            $localeDate,
-            $resource,
-            $resourceCollection,
-            $data
-        );
-
-        if ($this->getConfigData('is_sandbox')) {
-            $url = $this->getConfigDataPagofacil('endpoint_sandbox', ConfigInterface::CODECONF);
-        } else {
-            $url = $this->getConfigDataPagofacil('endpoint_production', ConfigInterface::CODECONF);
-        }
-
-        if ((integer)$this->getConfigData('monthy_installment_enabled')) {
-            $this->monthlyInstallments = $this->getConfigData('monthly_installments');
-        }
-
-        $this->endpoint = new EndPoint(
-            $url,
-            $this->getConfigData('uri_transaction')
-        );
-
-        $this->user = new UserClient(
-            $this->getConfigDataPagofacil('display_user_id', ConfigInterface::CODECONF),
-            $this->getConfigDataPagofacil('display_user_branch_office_id', ConfigInterface::CODECONF),
-            $this->getConfigDataPagofacil('display_user_phase_id', ConfigInterface::CODECONF),
-            $this->endpoint
-        );
-
-        try {
-            Register::add('user', $this->user);
-        } catch (Exception $exception) {
-            $this->zendLogger->alert($exception->getMessage());
-        }
-
-        try {
-            Register::add(
-                'client',
-                new Client(
-                    $this->user->getEndpoint()->getCompleteUrl(),
-                    ObjectManager::getInstance()->get(HttpClientInterface::class),
-                    ObjectManager::getInstance()->get(LoggerInterface::class)
-                )
-            );
-        } catch (Exception $exception) {
-            $this->zendLogger->alert($exception->getMessage());
-        }
-    }
-
-
     /**
      * @param InfoInterface $payment
      * @param float $amount

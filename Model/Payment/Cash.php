@@ -7,154 +7,25 @@ namespace PagoFacil\Payment\Model\Payment;
 use Exception;
 use Magento\Customer\Model\Address;
 use Magento\Customer\Model\Customer;
-use Magento\Directory\Helper\Data as DirectoryHelper;
-use Magento\Framework\Api\AttributeValueFactory;
-use Magento\Framework\Api\ExtensionAttributesFactory;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Data\Collection\AbstractDb;
-use Magento\Framework\Model\Context;
-use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\App\ObjectManager;
-use Magento\Framework\{DataObject, Registry};
-use Magento\Payment\Helper\Data;
+use Magento\Framework\{DataObject, Exception\LocalizedException, Registry};
 use Magento\Payment\Model\InfoInterface;
-use Magento\Payment\Model\Method\AbstractMethod;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment;
-use PagoFacil\Payment\Block\Info\Custom;
-use PagoFacil\Payment\Exceptions\AmountException;
-use PagoFacil\Payment\Exceptions\ClientException;
-use PagoFacil\Payment\Exceptions\PaymentException;
-use PagoFacil\Payment\Model\Payment\Interfaces\ConfigInterface;
+use PagoFacil\Payment\Model\Payment\Abstracts\Offline;
+use PagoFacil\Payment\Source\Client\Interfaces\ClientInterface;
+use PagoFacil\Payment\Source\Client\PrimitiveRequest;
+use PagoFacil\Payment\Source\Register;
 use PagoFacil\Payment\Source\Transaction\Charge;
 use Psr\Log\LoggerInterface;
-use Magento\Payment\Model\Method\Logger;
 use PagoFacil\Payment\Model\Payment\Interfaces\CashInterface;
-use PagoFacil\Payment\Source\Client\EndPoint;
 use PagoFacil\Payment\Source\Client\PagoFacil as Client;
-use PagoFacil\Payment\Source\Register;
 use PagoFacil\Payment\Source\User\Client as UserClient;
+use PagoFacil\Payment\Exceptions\{ClientException, PaymentException, AmountException};
 
-class Cash extends AbstractMethod implements CashInterface
+class Cash extends Offline implements CashInterface
 {
     use ConfigData;
-    /** @var EndPoint $endpoint */
-    private $endpoint;
-    /** @var UserClient $user */
-    private $user;
-    /** @var Client $client  */
-    private $client;
-
-    /**
-     * Cash constructor.
-     * @param Context $context
-     * @param Registry $registry
-     * @param ExtensionAttributesFactory $extensionFactory
-     * @param AttributeValueFactory $customAttributeFactory
-     * @param Data $paymentData
-     * @param ScopeConfigInterface $scopeConfig
-     * @param Logger $logger
-     * @param AbstractResource|null $resource
-     * @param AbstractDb|null $resourceCollection
-     * @param array $data
-     * @param DirectoryHelper|null $directory
-     */
-    public function __construct(
-        Context $context,
-        Registry $registry,
-        ExtensionAttributesFactory $extensionFactory,
-        AttributeValueFactory $customAttributeFactory,
-        Data $paymentData,
-        ScopeConfigInterface $scopeConfig,
-        Logger $logger,
-        AbstractResource $resource = null,
-        AbstractDb $resourceCollection = null,
-        array $data = [],
-        DirectoryHelper $directory = null
-    ) {
-        $url = null;
-        $this->_isGateway = true;
-        $this->_canCapture = true;
-        $this->_canAuthorize = true;
-        $this->_code = static::CODE;
-        $this->_isOffline = true;
-
-        parent::__construct($context,
-            $registry,
-            $extensionFactory,
-            $customAttributeFactory,
-            $paymentData,
-            $scopeConfig,
-            $logger,
-            $resource,
-            $resourceCollection,
-            $data,
-            $directory
-        );
-
-        /** @var LoggerInterface $logger */
-        $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
-
-        if ($this->getConfigData('is_sandbox')) {
-            $url = $this->getConfigDataPagofacil(
-                'endpoint_sandbox',
-                ConfigInterface::CODECONF
-            );
-        } else {
-            $url = $this->getConfigDataPagofacil(
-                'endpoint_production',
-                ConfigInterface::CODECONF
-            );
-        }
-
-        $this->endpoint = new EndPoint(
-            $url,
-            $this->getConfigData('uri_cash')
-        );
-
-        $this->user = new UserClient(
-            $this->getConfigDataPagofacil(
-                'display_user_id',
-                ConfigInterface::CODECONF
-            ),
-            $this->getConfigDataPagofacil(
-                'display_user_branch_office_id',
-                ConfigInterface::CODECONF
-            ),
-            $this->getConfigDataPagofacil(
-                'display_user_phase_id',
-                ConfigInterface::CODECONF
-            ),
-            $this->endpoint
-        );
-
-        try {
-            Register::add('user', $this->user);
-        } catch (Exception $exception) {
-            $logger->alert($exception->getMessage());
-        }
-
-        try {
-            Register::add(
-                'client',
-                new Client($this->user->getEndpoint()->getCompleteUrl())
-            );
-        } catch (Exception $exception) {
-            $logger->alert($exception->getMessage());
-        }
-    }
-
-    /**
-     * @param DataObject $data
-     * @return AbstractMethod
-     * @throws \Magento\Framework\Exception\LocalizedException
-     */
-    public function assignData(DataObject $data)
-    {
-        /** @var LoggerInterface $logger */
-        $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
-        return parent::assignData($data);
-    }
 
     public function authorize(InfoInterface $payment, $amount)
     {
@@ -169,13 +40,20 @@ class Cash extends AbstractMethod implements CashInterface
         }
 
         $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
-
+        $httpClient = Register::bringOut('client');
         $order = $payment->getOrder();
+
+        $request = new PrimitiveRequest(
+            ClientInterface::POST,
+            $this->buildRequest($order)
+        );
+
+        $response = $httpClient->sendRequest($request);
 
         try {
             $order->setStatus(Order::STATE_PENDING_PAYMENT);
             $order->setState(Order::STATE_PENDING_PAYMENT);
-        } catch (ClientException $exception) {
+        } catch (ClientException|LocalizedException|Exception $exception) {
             $logger->error($exception->getMessage());
         } catch (PaymentException $exception) {
             $logger->error($exception->getMessage());
@@ -198,6 +76,7 @@ class Cash extends AbstractMethod implements CashInterface
         /** @var LoggerInterface $logger */
         /** @var Address $billingAddress */
         /** @var Charge $charge */
+
         $logger = ObjectManager::getInstance()->get(LoggerInterface::class);
         $order = $payment->getOrder();
         $order->setStatus(Order::STATE_PENDING_PAYMENT);
@@ -211,5 +90,10 @@ class Cash extends AbstractMethod implements CashInterface
         $payment->setIsTransactionClosed(true);
 
         return parent::capture($payment, $amount); // TODO: Change the autogenerated stub
+    }
+
+    protected function init(): void
+    {
+        $this->getUrlEnviroment('uri_cash');
     }
 }
