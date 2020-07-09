@@ -49,9 +49,9 @@ class AbstractRegisty implements RegistryInterface
      */
     public function set(string $key, $value): void
     {
-        if ($this->data->offsetExists($key)) {
+        /*if ($this->data->offsetExists($key)) {
             throw new Exception("The key {$key} are really exists");
-        }
+        }*/
 
         $this->data->offsetSet($key, $value);
     }
